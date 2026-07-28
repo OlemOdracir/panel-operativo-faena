@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+
+injectWorkspacePackages: true
+
+allowBuilds:
+  '@scarf/scarf': false
+  esbuild: true

@@ -4,7 +4,7 @@
 
 1. Actualiza `main` y crea una rama corta desde ella.
 2. Implementa una unidad de trabajo coherente.
-3. Ejecuta `npm run format:check`, `npm run lint`, `npm run typecheck` y `npm test`.
+3. Ejecuta `pnpm format:check`, `pnpm lint`, `pnpm typecheck` y `pnpm test`.
 4. Crea commits pequeños con Conventional Commits.
 5. Abre un pull request y explica el problema, la solución y cómo se verificó.
 

@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: weekly
     groups:
-      npm-development-dependencies:
+      pnpm-development-dependencies:
         dependency-type: development
 
   - package-ecosystem: docker

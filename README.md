@@ -62,7 +62,7 @@ La motivación y las reglas de dependencia están explicadas en
 ### Ejecución local
 
 - Node.js 24 o superior.
-- npm 11 o superior.
+- pnpm 11 o superior, administrado con Corepack.
 - Docker con Docker Compose.
 
 ### Solo contenedores
@@ -123,22 +123,28 @@ los datos.
    Copy-Item .env.example .env
    ```
 
-2. Instala las dependencias:
+2. Habilita la versión de pnpm declarada por el repositorio:
 
    ```bash
-   npm ci
+   corepack enable
    ```
 
-3. Inicia PostgreSQL:
+3. Instala las dependencias respetando el lockfile:
+
+   ```bash
+   pnpm install --frozen-lockfile
+   ```
+
+4. Inicia PostgreSQL:
 
    ```bash
    docker compose up database --detach
    ```
 
-4. Inicia API y frontend con recarga:
+5. Inicia API y frontend con recarga:
 
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 En desarrollo, React utiliza <http://localhost:5173> y NestJS
@@ -168,22 +174,22 @@ Git y `.env.example` contiene exclusivamente valores reemplazables para desarrol
 
 Ejecuta los comandos desde la raíz:
 
-| Comando                | Acción                                    |
-| ---------------------- | ----------------------------------------- |
-| `npm run dev`          | Inicia API y web en modo desarrollo       |
-| `npm run build`        | Construye todos los workspaces            |
-| `npm run lint`         | Ejecuta análisis estático                 |
-| `npm run typecheck`    | Verifica TypeScript sin emitir archivos   |
-| `npm test`             | Ejecuta pruebas y umbrales de cobertura   |
-| `npm run format`       | Formatea archivos compatibles             |
-| `npm run format:check` | Verifica formato sin modificar            |
-| `npm run compose:up`   | Construye e inicia todos los contenedores |
-| `npm run compose:down` | Detiene los contenedores                  |
+| Comando             | Acción                                    |
+| ------------------- | ----------------------------------------- |
+| `pnpm dev`          | Inicia API y web en modo desarrollo       |
+| `pnpm build`        | Construye todos los workspaces            |
+| `pnpm lint`         | Ejecuta análisis estático                 |
+| `pnpm typecheck`    | Verifica TypeScript sin emitir archivos   |
+| `pnpm test`         | Ejecuta pruebas y umbrales de cobertura   |
+| `pnpm format`       | Formatea archivos compatibles             |
+| `pnpm format:check` | Verifica formato sin modificar            |
+| `pnpm compose:up`   | Construye e inicia todos los contenedores |
+| `pnpm compose:down` | Detiene los contenedores                  |
 
 Para las pruebas HTTP completas de la API:
 
 ```bash
-npm run test:e2e --workspace=@faena/api
+pnpm --filter @faena/api test:e2e
 ```
 
 ## API disponible

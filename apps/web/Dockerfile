@@ -1,12 +1,18 @@
 FROM node:24-alpine AS dependencies
 
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+RUN corepack enable \
+  && corepack prepare pnpm@11.17.0 --activate
+
 WORKDIR /workspace
 
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 
-RUN HUSKY=0 npm ci
+RUN HUSKY=0 pnpm install --frozen-lockfile
 
 FROM dependencies AS build
 
@@ -15,7 +21,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 
 COPY apps/web apps/web
 
-RUN npm run build --workspace=@faena/web
+RUN pnpm --filter @faena/web build
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
 

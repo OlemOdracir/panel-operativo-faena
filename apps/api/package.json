@@ -4,6 +4,9 @@
   "description": "API del Panel Operativo de Faena",
   "private": true,
   "license": "UNLICENSED",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "start": "tsx src/main.ts",
@@ -11,14 +14,14 @@
     "start:debug": "tsx --inspect watch src/main.ts",
     "start:prod": "node dist/main.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --max-warnings=0",
-    "lint:fix": "npm run lint -- --fix",
+    "lint:fix": "corepack pnpm run lint --fix",
     "typecheck": "tsc --noEmit",
     "clean:test": "node -e \"require('node:fs').rmSync('dist-test', { recursive: true, force: true })\"",
-    "test:build": "npm run clean:test && tsc --project tsconfig.test.json",
-    "test": "npm run test:build && node --test \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
-    "test:ci": "npm run test:build && node --test --experimental-test-coverage --test-coverage-branches=80 --test-coverage-functions=80 --test-coverage-lines=80 --test-coverage-exclude=\"dist-test/src/main.js\" --test-coverage-exclude=\"dist-test/**/*.module.js\" \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
-    "test:debug": "npm run test:build && node --inspect-brk --test \"dist-test/**/*.spec.js\"",
-    "test:e2e": "npm run test:build && node --test \"dist-test/**/*.e2e-spec.js\""
+    "test:build": "corepack pnpm run clean:test && tsc --project tsconfig.test.json",
+    "test": "corepack pnpm run test:build && node --test \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
+    "test:ci": "corepack pnpm run test:build && node --test --experimental-test-coverage --test-coverage-branches=80 --test-coverage-functions=80 --test-coverage-lines=80 --test-coverage-exclude=\"dist-test/src/main.js\" --test-coverage-exclude=\"dist-test/**/*.module.js\" \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
+    "test:debug": "corepack pnpm run test:build && node --inspect-brk --test \"dist-test/**/*.spec.js\"",
+    "test:e2e": "corepack pnpm run test:build && node --test \"dist-test/**/*.e2e-spec.js\""
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",
