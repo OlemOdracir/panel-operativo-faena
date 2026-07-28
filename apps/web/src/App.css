@@ -1,0 +1,148 @@
+.shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 24px 0 72px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--ink-strong);
+  background: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.brand-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.brand-copy strong {
+  color: var(--ink-strong);
+}
+
+.brand-copy span,
+.environment {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.environment {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.hero {
+  max-width: 850px;
+  padding: 92px 0 76px;
+}
+
+.eyebrow,
+.step {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 16px 0 24px;
+  color: var(--ink-strong);
+  font-size: clamp(2.5rem, 6vw, 5.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.hero-copy {
+  max-width: 690px;
+  color: var(--ink-muted);
+  font-size: 1.1rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.status-grid article {
+  min-height: 230px;
+  padding: 28px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.status-grid h2 {
+  margin: 36px 0 10px;
+  color: var(--ink-strong);
+  font-size: 1.35rem;
+}
+
+.status-grid p {
+  min-height: 72px;
+  margin: 0 0 24px;
+  color: var(--ink-muted);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-ready {
+  color: #79dfb2;
+  background: rgb(31 130 89 / 22%);
+}
+
+.badge-next {
+  color: #f8ca73;
+  background: rgb(173 111 0 / 22%);
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .environment {
+    display: none;
+  }
+
+  .hero {
+    padding: 64px 0 52px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-grid article {
+    min-height: auto;
+  }
+
+  .status-grid p {
+    min-height: auto;
+  }
+}

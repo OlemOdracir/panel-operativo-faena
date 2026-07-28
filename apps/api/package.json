@@ -1,0 +1,49 @@
+{
+  "name": "@faena/api",
+  "version": "0.1.0",
+  "description": "API del Panel Operativo de Faena",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "start": "tsx src/main.ts",
+    "start:dev": "tsx watch src/main.ts",
+    "start:debug": "tsx --inspect watch src/main.ts",
+    "start:prod": "node dist/main.js",
+    "lint": "eslint \"{src,test}/**/*.ts\" --max-warnings=0",
+    "lint:fix": "npm run lint -- --fix",
+    "typecheck": "tsc --noEmit",
+    "clean:test": "node -e \"require('node:fs').rmSync('dist-test', { recursive: true, force: true })\"",
+    "test:build": "npm run clean:test && tsc --project tsconfig.test.json",
+    "test": "npm run test:build && node --test \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
+    "test:ci": "npm run test:build && node --test --experimental-test-coverage --test-coverage-branches=80 --test-coverage-functions=80 --test-coverage-lines=80 --test-coverage-exclude=\"dist-test/src/main.js\" --test-coverage-exclude=\"dist-test/**/*.module.js\" \"dist-test/**/*.spec.js\" \"dist-test/**/*.e2e-spec.js\"",
+    "test:debug": "npm run test:build && node --inspect-brk --test \"dist-test/**/*.spec.js\"",
+    "test:e2e": "npm run test:build && node --test \"dist-test/**/*.e2e-spec.js\""
+  },
+  "dependencies": {
+    "@nestjs/common": "11.1.28",
+    "@nestjs/config": "4.0.4",
+    "@nestjs/core": "11.1.28",
+    "@nestjs/platform-express": "11.1.28",
+    "@nestjs/swagger": "11.4.5",
+    "helmet": "8.3.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@nestjs/testing": "^11.0.1",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^7.0.0",
+    "eslint": "10.8.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.6",
+    "globals": "17.8.0",
+    "supertest": "7.2.2",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.65.0"
+  }
+}
