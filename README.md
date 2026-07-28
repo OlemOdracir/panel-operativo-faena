@@ -129,10 +129,19 @@ los datos.
    corepack enable
    ```
 
+   Si Windows no permite crear el shim global sin privilegios, no es necesario cambiar la política
+   del sistema: utiliza `corepack pnpm` en lugar de `pnpm` en los comandos siguientes.
+
 3. Instala las dependencias respetando el lockfile:
 
    ```bash
    pnpm install --frozen-lockfile
+   ```
+
+   Fallback sin shim global:
+
+   ```bash
+   corepack pnpm install --frozen-lockfile
    ```
 
 4. Inicia PostgreSQL:
