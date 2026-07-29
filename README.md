@@ -11,10 +11,10 @@ Sistema full-stack para monitorear sensores mineros, abrir incidentes ante lectu
 - Órdenes `OPEN → ASSIGNED → IN_PROGRESS → CLOSED`.
 - Autenticación con usuarios `SUPERVISOR` y `ADMIN`, cookie HttpOnly y CSRF.
 - Panel React con TanStack Query y estados de carga, error, vacío y contenido.
-- Seed reproducible con lecturas dentro y fuera de rango.
+- Seed reproducible con lecturas dentro y fuera de rango y órdenes en cada estado del ciclo.
 - Generador opcional Python/pandas para simular lecturas en vivo.
 - Logs JSON con `X-Request-Id`.
-- Interfaz con Tailwind CSS 4, sidebar, detalle de incidentes y tablero Kanban.
+- Interfaz con Tailwind CSS 4, Inter autohospedada, iconos SVG, detalle de incidentes y tablero Kanban.
 
 ## Requisitos
 
@@ -41,6 +41,8 @@ Servicios locales:
 | PostgreSQL | localhost:5432 (solo loopback) |
 
 Los servicios `database-migrate` y `database-seed` se ejecutan antes de la API. El seed es idempotente.
+El `.env.example` permite tanto el panel Docker (`http://localhost:8080`) como Vite en desarrollo
+(`http://localhost:5173`) y publica la API en `http://localhost:13000`.
 
 Usuarios de demostración: `admin@faena.local` y `supervisor@faena.local`, con las contraseñas definidas en `SEED_ADMIN_PASSWORD` y `SEED_SUPERVISOR_PASSWORD`.
 
