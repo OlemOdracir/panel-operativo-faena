@@ -24,6 +24,13 @@ def required(name: str) -> str:
 
 
 def build_batch(sensor_ids: list[str], count: int, outlier_ratio: float) -> pd.DataFrame:
+    if not sensor_ids:
+        raise ValueError("At least one sensor is required")
+    if count < 1:
+        raise ValueError("Batch size must be positive")
+    if not 0 <= outlier_ratio <= 1:
+        raise ValueError("Outlier ratio must be between 0 and 1")
+
     now = datetime.now(timezone.utc)
     rows: list[dict[str, Any]] = []
     for index in range(count):
