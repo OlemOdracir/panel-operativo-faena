@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { canTransitionWorkOrder, type Priority, type WorkOrderStatus } from '@faena/contracts';
+import { type Priority, type WorkOrderStatus } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { canAdvanceWorkOrder, canAssignWorkOrder } from './domain/work-order.rules';
 
 type WorkOrderFilters = {
   page: number;
@@ -94,7 +95,7 @@ export class WorkOrdersService {
       });
     if (!team || !team.active)
       throw new NotFoundException({ code: 'TEAM_NOT_FOUND', message: 'Team not found' });
-    if (order.status !== 'OPEN')
+    if (!canAssignWorkOrder(order.status))
       throw new ConflictException({
         code: 'INVALID_WORK_ORDER_TRANSITION',
         message: 'Only open orders can be assigned',
@@ -113,7 +114,7 @@ export class WorkOrdersService {
         code: 'WORK_ORDER_NOT_FOUND',
         message: 'Work order not found',
       });
-    if (!canTransitionWorkOrder(order.status, status) || status === 'ASSIGNED')
+    if (!canAdvanceWorkOrder(order.status, status))
       throw new ConflictException({
         code: 'INVALID_WORK_ORDER_TRANSITION',
         message: `Cannot move order from ${order.status} to ${status}`,

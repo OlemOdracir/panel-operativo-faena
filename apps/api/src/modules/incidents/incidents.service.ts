@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { canTransitionIncident, incidentStatusSchema, type IncidentStatus } from '@faena/contracts';
+import { incidentStatusSchema, type IncidentStatus } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { canAdvanceIncident } from './domain/incident.rules';
 
 type IncidentFilters = {
   page: number;
@@ -66,11 +67,12 @@ export class IncidentsService {
     const current = await this.prisma.incident.findUnique({ where: { id } });
     if (!current)
       throw new NotFoundException({ code: 'INCIDENT_NOT_FOUND', message: 'Incident not found' });
-    if (!canTransitionIncident(current.status, status))
+    if (!canAdvanceIncident(current.status, status)) {
       throw new ConflictException({
         code: 'INVALID_INCIDENT_TRANSITION',
         message: `Cannot move incident from ${current.status} to ${status}`,
       });
+    }
     const now = new Date();
     await this.prisma.incident.update({
       where: { id },

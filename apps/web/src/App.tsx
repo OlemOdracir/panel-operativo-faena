@@ -12,9 +12,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { IncidentResponse, UserResponse, WorkOrderResponse } from '@faena/contracts';
 import { ApiError, api, type Team } from './api';
+import { authQueryKeys } from './features/auth/query-keys';
+import { catalogQueryKeys } from './features/catalog/query-keys';
+import { incidentQueryKeys } from './features/incidents/query-keys';
+import { workOrderQueryKeys } from './features/work-orders/query-keys';
 
 function App() {
-  const me = useQuery({ queryKey: ['me'], queryFn: api.me, retry: false });
+  const me = useQuery({ queryKey: authQueryKeys.me, queryFn: api.me, retry: false });
   if (me.isPending)
     return <PageMessage title="Cargando sesión" text="Verificando tu acceso al panel." />;
   if (me.isError) return <LoginPage />;
@@ -29,7 +33,7 @@ function LoginPage() {
   const login = useMutation({
     mutationFn: () => api.login(email, password),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: authQueryKeys.me });
       navigate('/');
     },
   });
@@ -87,7 +91,7 @@ function Panel({ user }: { user: UserResponse }) {
   const logout = useMutation({
     mutationFn: api.logout,
     onSuccess: async () => {
-      await queryClient.removeQueries({ queryKey: ['me'] });
+      await queryClient.removeQueries({ queryKey: authQueryKeys.me });
       navigate('/');
     },
   });
@@ -145,17 +149,17 @@ function Panel({ user }: { user: UserResponse }) {
 
 function Dashboard() {
   const incidents = useQuery({
-    queryKey: ['incidents'],
+    queryKey: incidentQueryKeys.all,
     queryFn: () => api.incidents(),
     refetchInterval: 15_000,
   });
   const orders = useQuery({
-    queryKey: ['work-orders'],
+    queryKey: workOrderQueryKeys.all,
     queryFn: api.workOrders,
     refetchInterval: 15_000,
   });
   const sensors = useQuery({
-    queryKey: ['sensors'],
+    queryKey: catalogQueryKeys.sensors,
     queryFn: api.sensors,
     refetchInterval: 15_000,
   });
@@ -233,13 +237,13 @@ function averageClosureHours(orders: WorkOrderResponse[]): number {
 function IncidentsPage() {
   const client = useQueryClient();
   const incidents = useQuery({
-    queryKey: ['incidents'],
+    queryKey: incidentQueryKeys.all,
     queryFn: () => api.incidents(),
     refetchInterval: 15_000,
   });
   const change = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => api.incidentStatus(id, status),
-    onSuccess: () => client.invalidateQueries({ queryKey: ['incidents'] }),
+    onSuccess: () => client.invalidateQueries({ queryKey: incidentQueryKeys.all }),
   });
   return (
     <section className="content">
@@ -270,20 +274,20 @@ function IncidentDetailPage() {
   const { id = '' } = useParams();
   const client = useQueryClient();
   const incident = useQuery({
-    queryKey: ['incident', id],
+    queryKey: incidentQueryKeys.detail(id),
     queryFn: () => api.incident(id),
     enabled: Boolean(id),
   });
-  const teams = useQuery({ queryKey: ['teams'], queryFn: api.teams });
+  const teams = useQuery({ queryKey: catalogQueryKeys.teams, queryFn: api.teams });
   const create = useMutation({
     mutationFn: api.createWorkOrder,
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ['work-orders'] });
+      await client.invalidateQueries({ queryKey: workOrderQueryKeys.all });
     },
   });
   const change = useMutation({
     mutationFn: ({ status }: { status: string }) => api.incidentStatus(id, status),
-    onSuccess: () => client.invalidateQueries({ queryKey: ['incident', id] }),
+    onSuccess: () => client.invalidateQueries({ queryKey: incidentQueryKeys.detail(id) }),
   });
 
   if (incident.isPending)
@@ -381,26 +385,26 @@ function IncidentDetailPage() {
 function WorkOrdersPage() {
   const client = useQueryClient();
   const orders = useQuery({
-    queryKey: ['work-orders'],
+    queryKey: workOrderQueryKeys.all,
     queryFn: api.workOrders,
     refetchInterval: 15_000,
   });
-  const teams = useQuery({ queryKey: ['teams'], queryFn: api.teams });
+  const teams = useQuery({ queryKey: catalogQueryKeys.teams, queryFn: api.teams });
   const [showForm, setShowForm] = useState(false);
   const create = useMutation({
     mutationFn: api.createWorkOrder,
     onSuccess: async () => {
       setShowForm(false);
-      await client.invalidateQueries({ queryKey: ['work-orders'] });
+      await client.invalidateQueries({ queryKey: workOrderQueryKeys.all });
     },
   });
   const assign = useMutation({
     mutationFn: ({ id, teamId }: { id: string; teamId: string }) => api.assignWorkOrder(id, teamId),
-    onSuccess: () => client.invalidateQueries({ queryKey: ['work-orders'] }),
+    onSuccess: () => client.invalidateQueries({ queryKey: workOrderQueryKeys.all }),
   });
   const advance = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => api.workOrderStatus(id, status),
-    onSuccess: () => client.invalidateQueries({ queryKey: ['work-orders'] }),
+    onSuccess: () => client.invalidateQueries({ queryKey: workOrderQueryKeys.all }),
   });
   return (
     <section className="content">

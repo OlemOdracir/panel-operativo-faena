@@ -124,7 +124,7 @@ docs                     arquitectura, seguridad y API
 
 La interfaz usa Tailwind CSS 4 mediante `@tailwindcss/vite`, con tokens visuales definidos en `apps/web/src/index.css`. Los estilos específicos del dominio permanecen en `App.css` mientras la migración se completa por componentes.
 
-La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md) y los ADR en [`docs/adr/`](docs/adr/). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md) y el modelo de amenazas en [`docs/threat-model.md`](docs/threat-model.md).
+La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md), los patrones aplicados en [`docs/architecture-patterns.md`](docs/architecture-patterns.md) y los ADR en [`docs/adr/`](docs/adr/). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md) y el modelo de amenazas en [`docs/threat-model.md`](docs/threat-model.md).
 
 ## Seguridad
 
