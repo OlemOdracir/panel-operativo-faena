@@ -115,7 +115,7 @@ tools/reading-generator  simulador Python/pandas
 docs                     arquitectura, seguridad y API
 ```
 
-La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md).
+La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md) y los ADR en [`docs/adr/`](docs/adr/). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md) y el modelo de amenazas en [`docs/threat-model.md`](docs/threat-model.md).
 
 ## Seguridad
 
