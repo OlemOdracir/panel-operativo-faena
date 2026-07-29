@@ -9,4 +9,6 @@ $env:FAENA_ADMIN_PASSWORD='la contraseña configurada en .env'
 faena-reading-generator
 ```
 
+Para ejecutar sus pruebas: `pip install -e ".[test]"` y `python -m pytest -q`.
+
 El generador solo envía `POST /readings`. La detección y apertura de incidentes permanece en la API.
