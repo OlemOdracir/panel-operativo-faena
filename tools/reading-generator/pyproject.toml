@@ -1,0 +1,8 @@
+[project]
+name = "faena-reading-generator"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pandas>=2.2,<3", "requests>=2.32,<3"]
+
+[project.scripts]
+faena-reading-generator = "generator:main"
