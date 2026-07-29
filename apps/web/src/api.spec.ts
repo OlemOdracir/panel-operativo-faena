@@ -21,6 +21,7 @@ const incident = {
   resolvedAt: null,
   acknowledgedBy: null,
   resolvedBy: null,
+  severity: 'HIGH',
 };
 const order = {
   id: '00000000-0000-4000-8000-000000000004',
@@ -58,7 +59,9 @@ describe('api client', () => {
       if (url.includes('/work-orders?')) return new Response(JSON.stringify(page([order])));
       if (url.endsWith('/work-orders')) return new Response(JSON.stringify(order));
       return new Response(
-        JSON.stringify([{ id: user.id, code: 'TEAM-A', name: 'Equipo A', active: true }]),
+        JSON.stringify([
+          { id: user.id, code: 'TEAM-A', name: 'Equipo A', active: true, areaId: user.id },
+        ]),
       );
     });
     vi.stubGlobal('fetch', fetchMock);

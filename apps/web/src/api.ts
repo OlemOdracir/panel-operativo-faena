@@ -85,6 +85,7 @@ export const api = {
       {},
       pageSchema(incidentResponseSchema),
     ),
+  incident: (id: string) => request(`/incidents/${id}`, {}, incidentResponseSchema),
   incidentStatus: (id: string, status: string) =>
     request(
       `/incidents/${id}/status`,
@@ -142,6 +143,24 @@ export const api = {
           code: z.string(),
           name: z.string(),
           active: z.boolean(),
+          areaId: z.string().uuid(),
+        }),
+      ),
+    ),
+  sensors: () =>
+    request(
+      '/sensors',
+      {},
+      z.array(
+        z.strictObject({
+          id: z.string().uuid(),
+          code: z.string(),
+          name: z.string(),
+          unit: z.string(),
+          minValue: z.coerce.number(),
+          maxValue: z.coerce.number(),
+          areaId: z.string().uuid(),
+          area: z.strictObject({ id: z.string().uuid(), code: z.string(), name: z.string() }),
         }),
       ),
     ),

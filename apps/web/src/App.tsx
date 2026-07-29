@@ -1,5 +1,13 @@
 import './App.css';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { IncidentResponse, UserResponse, WorkOrderResponse } from '@faena/contracts';
@@ -84,7 +92,7 @@ function Panel({ user }: { user: UserResponse }) {
     },
   });
   return (
-    <main className="app-shell">
+    <main className="app-shell app-layout">
       <header className="topbar">
         <Link to="/" className="brand">
           <span className="brand-mark">PF</span>
@@ -102,29 +110,35 @@ function Panel({ user }: { user: UserResponse }) {
           </button>
         </div>
       </header>
-      <nav className="nav" aria-label="Navegación principal">
-        <Link className={location.pathname === '/' ? 'active' : ''} to="/">
-          Resumen
-        </Link>
-        <Link
-          className={location.pathname.startsWith('/incidents') ? 'active' : ''}
-          to="/incidents"
-        >
-          Incidentes
-        </Link>
-        <Link
-          className={location.pathname.startsWith('/work-orders') ? 'active' : ''}
-          to="/work-orders"
-        >
-          Órdenes de trabajo
-        </Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/incidents" element={<IncidentsPage />} />
-        <Route path="/work-orders" element={<WorkOrdersPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="app-body">
+        <aside className="sidebar" aria-label="Navegación principal">
+          <span className="sidebar-label">Operación</span>
+          <Link className={location.pathname === '/' ? 'active' : ''} to="/">
+            <span aria-hidden="true">⌂</span> Resumen
+          </Link>
+          <Link
+            className={location.pathname.startsWith('/incidents') ? 'active' : ''}
+            to="/incidents"
+          >
+            <span aria-hidden="true">◈</span> Incidentes
+          </Link>
+          <Link
+            className={location.pathname.startsWith('/work-orders') ? 'active' : ''}
+            to="/work-orders"
+          >
+            <span aria-hidden="true">▦</span> Órdenes de trabajo
+          </Link>
+        </aside>
+        <div className="main-content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/incidents" element={<IncidentsPage />} />
+            <Route path="/incidents/:id" element={<IncidentDetailPage />} />
+            <Route path="/work-orders" element={<WorkOrdersPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </div>
     </main>
   );
 }
@@ -140,9 +154,14 @@ function Dashboard() {
     queryFn: api.workOrders,
     refetchInterval: 15_000,
   });
-  if (incidents.isPending || orders.isPending)
+  const sensors = useQuery({
+    queryKey: ['sensors'],
+    queryFn: api.sensors,
+    refetchInterval: 15_000,
+  });
+  if (incidents.isPending || orders.isPending || sensors.isPending)
     return <PageMessage title="Cargando resumen" text="Consultando el estado operacional." />;
-  if (incidents.isError || orders.isError)
+  if (incidents.isError || orders.isError || sensors.isError)
     return (
       <PageMessage
         title="No se pudo cargar el resumen"
@@ -170,10 +189,12 @@ function Dashboard() {
           value={orders.data.data.filter((item) => item.status !== 'CLOSED').length}
           tone="accent"
         />
+        <Metric label="Sensores activos" value={sensors.data.length} tone="quiet" />
         <Metric
-          label="Órdenes cerradas"
-          value={orders.data.data.filter((item) => item.status === 'CLOSED').length}
+          label="Tiempo medio de cierre"
+          value={averageClosureHours(orders.data.data)}
           tone="quiet"
+          suffix=" h"
         />
       </div>
       <div className="two-columns">
@@ -194,6 +215,19 @@ function Dashboard() {
       </div>
     </section>
   );
+}
+
+function averageClosureHours(orders: WorkOrderResponse[]): number {
+  const closed = orders.filter((order) => order.closedAt);
+  if (!closed.length) return 0;
+  const totalHours = closed.reduce((sum, order) => {
+    return (
+      sum +
+      (new Date(order.closedAt as string).getTime() - new Date(order.createdAt).getTime()) /
+        3_600_000
+    );
+  }, 0);
+  return Math.round((totalHours / closed.length) * 10) / 10;
 }
 
 function IncidentsPage() {
@@ -228,6 +262,118 @@ function IncidentsPage() {
           />
         </div>
       )}
+    </section>
+  );
+}
+
+function IncidentDetailPage() {
+  const { id = '' } = useParams();
+  const client = useQueryClient();
+  const incident = useQuery({
+    queryKey: ['incident', id],
+    queryFn: () => api.incident(id),
+    enabled: Boolean(id),
+  });
+  const teams = useQuery({ queryKey: ['teams'], queryFn: api.teams });
+  const create = useMutation({
+    mutationFn: api.createWorkOrder,
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['work-orders'] });
+    },
+  });
+  const change = useMutation({
+    mutationFn: ({ status }: { status: string }) => api.incidentStatus(id, status),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['incident', id] }),
+  });
+
+  if (incident.isPending)
+    return <PageMessage title="Cargando incidente" text="Consultando el detalle operacional." />;
+  if (incident.isError)
+    return (
+      <PageMessage title="No se pudo cargar el incidente" text={incident.error.message} error />
+    );
+
+  const item = incident.data;
+  return (
+    <section className="content">
+      <Link className="back-link" to="/incidents">
+        ← Volver a incidentes
+      </Link>
+      <div className="page-heading">
+        <PageHeading
+          eyebrow="Detalle operacional"
+          title={`${item.sensorCode} · ${item.areaName}`}
+          text="Incidente generado por una lectura fuera de rango."
+        />
+        <StatusBadge status={item.status} />
+      </div>
+      <div className="two-columns detail-grid md:grid-cols-2 md:items-start">
+        <section className="card detail-card bg-faena-surface">
+          <div className="card-heading">
+            <h2>Datos del incidente</h2>
+            <SeverityBadge severity={item.severity} />
+          </div>
+          <dl className="detail-list">
+            <div>
+              <dt>Área</dt>
+              <dd>{item.areaName}</dd>
+            </div>
+            <div>
+              <dt>Sensor</dt>
+              <dd>{item.sensorCode}</dd>
+            </div>
+            <div>
+              <dt>Detectado</dt>
+              <dd>{new Date(item.openedAt).toLocaleString('es-CL')}</dd>
+            </div>
+            <div>
+              <dt>Lectura</dt>
+              <dd className="reading-alert">
+                {item.value} · rango {item.minValue}–{item.maxValue}
+              </dd>
+            </div>
+          </dl>
+          <div className="row-actions">
+            {item.status === 'OPEN' && (
+              <button
+                onClick={() => change.mutate({ status: 'ACKNOWLEDGED' })}
+                disabled={change.isPending}
+              >
+                Tomar incidente
+              </button>
+            )}
+            {item.status === 'ACKNOWLEDGED' && (
+              <button
+                onClick={() => change.mutate({ status: 'RESOLVED' })}
+                disabled={change.isPending}
+              >
+                Resolver incidente
+              </button>
+            )}
+          </div>
+        </section>
+        <section className="card detail-card bg-faena-surface">
+          <div className="card-heading">
+            <h2>Crear orden de trabajo</h2>
+            <span className="eyebrow">Gestión</span>
+          </div>
+          <WorkOrderForm
+            incidentId={item.id}
+            pending={create.isPending}
+            onSubmit={(value) => create.mutate(value)}
+          />
+          {create.isSuccess && (
+            <p className="success" role="status">
+              Orden creada correctamente.
+            </p>
+          )}
+          {teams.isError && (
+            <p className="error" role="alert">
+              No se pudieron cargar los equipos.
+            </p>
+          )}
+        </section>
+      </div>
     </section>
   );
 }
@@ -278,25 +424,30 @@ function WorkOrdersPage() {
       ) : orders.data.data.length === 0 ? (
         <Empty text="Todavía no hay órdenes de trabajo." />
       ) : (
-        <div className="card">
-          <OrderList
-            data={orders.data.data}
-            teams={teams.data}
-            onAssign={(id, teamId) => assign.mutate({ id, teamId })}
-            onAdvance={(id, status) => advance.mutate({ id, status })}
-          />
-        </div>
+        <OrderBoard
+          data={orders.data.data}
+          teams={teams.data}
+          onAssign={(id, teamId) => assign.mutate({ id, teamId })}
+          onAdvance={(id, status) => advance.mutate({ id, status })}
+        />
       )}
     </section>
   );
 }
 
 function WorkOrderForm({
+  incidentId,
   pending,
   onSubmit,
 }: {
+  incidentId?: string;
   pending: boolean;
-  onSubmit: (value: { title: string; description?: string; priority: string }) => void;
+  onSubmit: (value: {
+    title: string;
+    description?: string;
+    priority: string;
+    incidentId?: string;
+  }) => void;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -306,7 +457,7 @@ function WorkOrderForm({
       className="card form-grid"
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit({ title, description: description || undefined, priority });
+        onSubmit({ title, description: description || undefined, priority, incidentId });
       }}
     >
       <label>
@@ -344,6 +495,45 @@ function WorkOrderForm({
   );
 }
 
+function OrderBoard({
+  data,
+  teams,
+  onAssign,
+  onAdvance,
+}: {
+  data: WorkOrderResponse[];
+  teams?: Team[];
+  onAssign: (id: string, teamId: string) => void;
+  onAdvance: (id: string, status: string) => void;
+}) {
+  const columns = [
+    ['OPEN', 'Abiertas'],
+    ['ASSIGNED', 'Asignadas'],
+    ['IN_PROGRESS', 'En progreso'],
+    ['CLOSED', 'Cerradas'],
+  ] as const;
+  return (
+    <div className="kanban-grid grid grid-cols-1 gap-4 xl:grid-cols-4">
+      {columns.map(([status, label]) => (
+        <section className="card kanban-column" key={status}>
+          <div className="card-heading">
+            <h2>{label}</h2>
+            <span className="count-badge">
+              {data.filter((item) => item.status === status).length}
+            </span>
+          </div>
+          <OrderList
+            data={data.filter((item) => item.status === status)}
+            teams={teams}
+            onAssign={onAssign}
+            onAdvance={onAdvance}
+          />
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function IncidentList({
   data,
   onStatus,
@@ -362,6 +552,7 @@ function IncidentList({
             </span>
           </div>
           <div className="row-actions">
+            <SeverityBadge severity={item.severity} />
             <StatusBadge status={item.status} />
             {onStatus && item.status === 'OPEN' && (
               <button onClick={() => onStatus(item.id, 'ACKNOWLEDGED')}>Tomar</button>
@@ -434,11 +625,27 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`status status-${status.toLowerCase()}`}>{status.replace('_', ' ')}</span>
   );
 }
-function Metric({ label, value, tone }: { label: string; value: number; tone: string }) {
+function SeverityBadge({ severity }: { severity: string }) {
+  return <span className={`severity severity-${severity.toLowerCase()}`}>{severity}</span>;
+}
+function Metric({
+  label,
+  value,
+  tone,
+  suffix = '',
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  suffix?: string;
+}) {
   return (
     <article className={`metric ${tone}`}>
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong>
+        {value}
+        {suffix}
+      </strong>
     </article>
   );
 }

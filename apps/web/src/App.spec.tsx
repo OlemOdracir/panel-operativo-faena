@@ -24,9 +24,11 @@ describe('App', () => {
                 role: 'SUPERVISOR',
               },
             }
-          : url.includes('/incidents')
-            ? { data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }
-            : { data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } };
+          : url.includes('/sensors')
+            ? []
+            : url.includes('/incidents')
+              ? { data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }
+              : { data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } };
         return { ok: true, status: 200, json: async () => body };
       }),
     );
