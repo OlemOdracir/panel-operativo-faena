@@ -45,8 +45,8 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Filtrar incidentes' })).toBeVisible();
   await expect(page.locator('.list-row').first()).toBeVisible();
-  const sidebar = page.locator('.sidebar');
-  const footer = page.locator('.app-footer');
+  const sidebar = page.getByRole('navigation', { name: 'Navegación principal' });
+  const footer = page.getByRole('contentinfo');
   const sidebarBeforeFilter = await sidebar.boundingBox();
   const footerBeforeFilter = await footer.boundingBox();
 
@@ -74,6 +74,22 @@ test('administrator session retains the admin role', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
   await expect(page.getByText(/Administrador/)).toBeVisible();
+});
+
+test('mobile shell opens a temporary drawer and closes after navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+  await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Abrir menú' }).click();
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
+  await expect(navigation).toBeVisible();
+  await navigation.getByRole('link', { name: 'Incidentes' }).click();
+  await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
+  await expect(navigation).toBeHidden();
 });
 
 test('API rejects operational data without a session', async () => {
