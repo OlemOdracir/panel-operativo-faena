@@ -57,6 +57,8 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   const footerAfterFilter = await footer.boundingBox();
   expect(sidebarAfterFilter?.height).toBe(sidebarBeforeFilter?.height);
   expect(footerAfterFilter?.y).toBe(footerBeforeFilter?.y);
+  const viewport = page.viewportSize();
+  expect((footerAfterFilter?.y ?? 0) + (footerAfterFilter?.height ?? 0)).toBe(viewport?.height);
 
   await page.getByRole('link', { name: 'Órdenes de trabajo' }).click();
   await expect(page.getByRole('heading', { name: 'Órdenes de trabajo' })).toBeVisible();
