@@ -46,6 +46,7 @@ describe('App', () => {
       expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
     );
     expect(screen.getByText('Supervisión · Supervisor')).toBeInTheDocument();
+    expect(screen.getByText('Uso interno · Operación de faena')).toBeInTheDocument();
   });
 
   it('keeps the dashboard focused and provides filters in the incident workspace', async () => {

@@ -12,6 +12,20 @@
   gap: 28px;
   padding-top: 22px;
 }
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 18px 0 0 238px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+.footer-security {
+  margin-left: auto;
+  color: #79dfb2;
+}
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -595,6 +609,14 @@ button:disabled {
   }
   .app-body {
     grid-template-columns: 1fr;
+  }
+  .app-footer {
+    flex-wrap: wrap;
+    padding-left: 0;
+  }
+  .footer-security {
+    width: 100%;
+    margin-left: 0;
   }
   .sidebar {
     min-height: auto;

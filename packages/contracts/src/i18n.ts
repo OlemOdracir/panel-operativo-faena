@@ -30,6 +30,11 @@ export const esCL = {
     incidents: 'Incidentes',
     workOrders: 'Órdenes de trabajo',
   },
+  footer: {
+    internalUse: 'Uso interno · Operación de faena',
+    protectedSession: 'Sesión protegida',
+    copyright: (year: number) => `© ${year} Panel Operativo de Faena`,
+  },
   dashboard: {
     eyebrow: 'Vista operacional',
     title: 'Estado de la faena',

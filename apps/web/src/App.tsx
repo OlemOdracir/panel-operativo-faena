@@ -165,6 +165,12 @@ function Panel({ user }: { user: UserResponse }) {
           </Routes>
         </div>
       </div>
+      <footer className="app-footer">
+        <span>{esCL.footer.copyright(new Date().getFullYear())}</span>
+        <span aria-hidden="true">·</span>
+        <span>{esCL.footer.internalUse}</span>
+        <span className="footer-security">{esCL.footer.protectedSession}</span>
+      </footer>
     </main>
   );
 }
