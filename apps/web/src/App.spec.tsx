@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
@@ -202,6 +203,92 @@ describe('App', () => {
       expect(screen.getByRole('heading', { name: /CHA-TEMP-01/ })).toBeInTheDocument(),
     );
     expect(screen.getByText('Crear orden de trabajo')).toBeInTheDocument();
+  });
+
+  it('renders the work-order board and lifecycle actions', async () => {
+    const order = {
+      id: '00000000-0000-4000-8000-000000000010',
+      title: 'Revisar bomba',
+      description: null,
+      priority: 'HIGH',
+      status: 'ASSIGNED',
+      incidentId: null,
+      teamId: '00000000-0000-4000-8000-000000000011',
+      teamName: 'Mantenimiento',
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: '2026-01-01T00:00:00.000Z',
+      startedAt: null,
+      closedAt: null,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({
+              data: [order],
+              meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/teams'))
+          return new Response(
+            JSON.stringify([
+              {
+                id: order.teamId,
+                code: 'MANT',
+                name: order.teamName,
+                active: true,
+                areaId: 'area-1',
+              },
+            ]),
+          );
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/work-orders']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Revisar bomba')).toBeInTheDocument());
+    expect(screen.getByText('Asignadas')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Iniciar' })).toBeInTheDocument();
+  });
+
+  it('shows the login form when there is no active session', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me')) return new Response('{}', { status: 401 });
+        return new Response(JSON.stringify({ user: userForTest }));
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Ingresa a la faena' })).toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText('Correo')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Correo'), 'supervisor@faena.local');
+    await user.type(screen.getByLabelText('Contraseña'), 'password');
+    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeEnabled();
   });
 });
 
