@@ -46,6 +46,7 @@ import {
   type MRT_PaginationState,
   type MRT_SortingState,
 } from 'material-react-table';
+import { MRT_Localization_ES } from 'material-react-table/locales/es';
 import {
   useEffect,
   useMemo,
@@ -488,7 +489,7 @@ function IncidentsPage() {
       openedFrom: openedFrom?.toISOString(),
       openedTo: openedTo?.toISOString(),
       sortBy: (sorting[0]?.id as IncidentListQuery['sortBy']) || 'openedAt',
-      sortDirection: sorting[0]?.desc ? 'desc' : 'asc',
+      sortDirection: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : 'desc',
     };
   }, [
     pagination,
@@ -757,7 +758,7 @@ function WorkOrdersPage() {
       createdFrom: createdFrom?.toISOString(),
       createdTo: createdTo?.toISOString(),
       sortBy: (sorting[0]?.id as WorkOrderListQuery['sortBy']) || 'createdAt',
-      sortDirection: sorting[0]?.desc ? 'desc' : 'asc',
+      sortDirection: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : 'desc',
     };
   }, [
     pagination,
@@ -956,6 +957,7 @@ function useIncidentTable(
   return useMaterialReactTable({
     columns,
     data,
+    localization: MRT_Localization_ES,
     manualFiltering: true,
     manualPagination: true,
     manualSorting: true,
@@ -1031,6 +1033,7 @@ function useWorkOrderTable(
   return useMaterialReactTable({
     columns,
     data,
+    localization: MRT_Localization_ES,
     manualFiltering: true,
     manualPagination: true,
     manualSorting: true,
