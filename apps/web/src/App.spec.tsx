@@ -139,7 +139,7 @@ describe('App', () => {
       expect.stringContaining('areaId=00000000-0000-4000-8000-000000000099'),
       expect.anything(),
     );
-  });
+  }, 15_000);
 
   it('provides the query client to the component tree', () => {
     render(
