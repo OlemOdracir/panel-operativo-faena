@@ -48,7 +48,7 @@ describe('App', () => {
     expect(screen.getByText('Supervisión · Supervisor')).toBeInTheDocument();
   });
 
-  it('presents the dashboard incidents as a filterable operational table', async () => {
+  it('keeps the dashboard focused and provides filters in the incident workspace', async () => {
     const user = userEvent.setup();
     const incidents = [
       {
@@ -115,11 +115,13 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText('INC-11111111')).toBeInTheDocument());
-    expect(screen.getByRole('columnheader', { name: 'Lectura / rango' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Prioridades operativas')).toBeInTheDocument());
+    expect(screen.queryByText('Filtrar incidentes')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: /Incidentes/ }));
+    await waitFor(() => expect(screen.getByText('Filtrar incidentes')).toBeInTheDocument());
     await user.selectOptions(screen.getByRole('combobox', { name: 'Área' }), 'Molienda');
-    expect(screen.queryByRole('link', { name: 'INC-11111111' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'INC-22222222' })).toBeInTheDocument();
+    expect(document.querySelectorAll('.list-row')).toHaveLength(1);
+    expect(document.querySelector('.list-row')).toHaveTextContent('MOL-VIB-01');
   });
 
   it('provides the query client to the component tree', () => {
@@ -426,7 +428,7 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText('CHA-TEMP-01')).toBeInTheDocument());
+    await waitFor(() => expect(document.querySelectorAll('.list-row')).toHaveLength(2));
     expect(screen.getByRole('button', { name: 'Tomar' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Resolver' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Tomar' }));

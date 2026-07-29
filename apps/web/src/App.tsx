@@ -185,34 +185,17 @@ function Dashboard() {
     queryFn: api.sensors,
     refetchInterval: 15_000,
   });
-  const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    severity: '',
-    area: '',
-    sensor: '',
-  });
   const allIncidents = incidents.data?.data ?? emptyIncidents;
   const allOrders = orders.data?.data ?? emptyWorkOrders;
-  const areas = [...new Set(allIncidents.map((incident) => incident.areaName))].sort();
-  const sensorCodes = [...new Set(allIncidents.map((incident) => incident.sensorCode))].sort();
-  const filteredIncidents = useMemo(() => {
-    const search = filters.search.trim().toLocaleLowerCase(esCL.locale);
-    return allIncidents.filter((incident) => {
-      const matchesSearch =
-        !search ||
-        `${incidentReference(incident.id)} ${incident.sensorCode} ${incident.areaName}`
-          .toLocaleLowerCase(esCL.locale)
-          .includes(search);
+  const priorityIncidents = [...allIncidents]
+    .filter((incident) => incident.status !== 'RESOLVED')
+    .sort((left, right) => {
+      const priorityDifference = incidentPriority(right.severity) - incidentPriority(left.severity);
       return (
-        matchesSearch &&
-        (!filters.status || incident.status === filters.status) &&
-        (!filters.severity || incident.severity === filters.severity) &&
-        (!filters.area || incident.areaName === filters.area) &&
-        (!filters.sensor || incident.sensorCode === filters.sensor)
+        priorityDifference || new Date(right.openedAt).getTime() - new Date(left.openedAt).getTime()
       );
-    });
-  }, [allIncidents, filters]);
+    })
+    .slice(0, 3);
   const inProgressOrders = allOrders.filter((order) => order.status === 'IN_PROGRESS').length;
   const latestUpdate = Math.max(
     incidents.dataUpdatedAt,
@@ -268,79 +251,16 @@ function Dashboard() {
           suffix=" h"
         />
       </div>
-      <section className="card dashboard-filter-card" aria-label={esCL.dashboard.filters}>
-        <div className="card-heading">
-          <div>
-            <h2>{esCL.dashboard.filters}</h2>
-            <p>{esCL.dashboard.showing(filteredIncidents.length, allIncidents.length)}</p>
-          </div>
-          <button
-            onClick={() =>
-              setFilters({ search: '', status: '', severity: '', area: '', sensor: '' })
-            }
-            disabled={Object.values(filters).every((value) => !value)}
-          >
-            {esCL.dashboard.clearFilters}
-          </button>
-        </div>
-        <div className="dashboard-filters">
-          <label>
-            {esCL.dashboard.search}
-            <input
-              value={filters.search}
-              onChange={(event) =>
-                setFilters((current) => ({ ...current, search: event.target.value }))
-              }
-              placeholder={esCL.dashboard.searchPlaceholder}
-            />
-          </label>
-          <DashboardSelect
-            label={esCL.dashboard.status}
-            value={filters.status}
-            onChange={(value) => setFilters((current) => ({ ...current, status: value }))}
-            emptyLabel={esCL.dashboard.allStatuses}
-            options={[
-              ['OPEN', labelStatus('OPEN')],
-              ['ACKNOWLEDGED', labelStatus('ACKNOWLEDGED')],
-              ['RESOLVED', labelStatus('RESOLVED')],
-            ]}
-          />
-          <DashboardSelect
-            label={esCL.dashboard.severity}
-            value={filters.severity}
-            onChange={(value) => setFilters((current) => ({ ...current, severity: value }))}
-            emptyLabel={esCL.dashboard.allSeverities}
-            options={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((severity) => [
-              severity,
-              labelSeverity(severity),
-            ])}
-          />
-          <DashboardSelect
-            label={esCL.dashboard.area}
-            value={filters.area}
-            onChange={(value) => setFilters((current) => ({ ...current, area: value }))}
-            emptyLabel={esCL.dashboard.allAreas}
-            options={areas.map((area) => [area, area])}
-          />
-          <DashboardSelect
-            label={esCL.dashboard.sensor}
-            value={filters.sensor}
-            onChange={(value) => setFilters((current) => ({ ...current, sensor: value }))}
-            emptyLabel={esCL.dashboard.allSensors}
-            options={sensorCodes.map((sensor) => [sensor, sensor])}
-          />
-        </div>
-      </section>
       <div className="dashboard-primary-grid">
-        <section className="card dashboard-table-card">
+        <section className="card dashboard-priorities-card">
           <div className="card-heading">
             <div>
-              <h2>{esCL.dashboard.incidentsToManage}</h2>
-              <p>{esCL.dashboard.incidentTableDescription}</p>
+              <h2>{esCL.dashboard.priorityIncidents}</h2>
+              <p>{esCL.dashboard.priorityDescription}</p>
             </div>
             <Link to="/incidents">{esCL.dashboard.seeAll}</Link>
           </div>
-          <IncidentTable data={filteredIncidents} />
+          <PriorityIncidentList data={priorityIncidents} />
         </section>
         <aside className="dashboard-summary-stack">
           <OperationalDistribution
@@ -396,6 +316,33 @@ function IncidentsPage() {
     mutationFn: ({ id, status }: { id: string; status: string }) => api.incidentStatus(id, status),
     onSuccess: () => client.invalidateQueries({ queryKey: incidentQueryKeys.all }),
   });
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    severity: '',
+    area: '',
+    sensor: '',
+  });
+  const allIncidents = incidents.data?.data ?? emptyIncidents;
+  const areas = [...new Set(allIncidents.map((incident) => incident.areaName))].sort();
+  const sensorCodes = [...new Set(allIncidents.map((incident) => incident.sensorCode))].sort();
+  const filteredIncidents = useMemo(() => {
+    const search = filters.search.trim().toLocaleLowerCase(esCL.locale);
+    return allIncidents.filter((incident) => {
+      const matchesSearch =
+        !search ||
+        `${incident.id} ${incident.sensorCode} ${incident.areaName}`
+          .toLocaleLowerCase(esCL.locale)
+          .includes(search);
+      return (
+        matchesSearch &&
+        (!filters.status || incident.status === filters.status) &&
+        (!filters.severity || incident.severity === filters.severity) &&
+        (!filters.area || incident.areaName === filters.area) &&
+        (!filters.sensor || incident.sensorCode === filters.sensor)
+      );
+    });
+  }, [allIncidents, filters]);
   return (
     <section className="content">
       <PageHeading
@@ -407,15 +354,84 @@ function IncidentsPage() {
         <Loading />
       ) : incidents.isError ? (
         <ErrorState error={incidents.error} />
-      ) : incidents.data.data.length === 0 ? (
+      ) : allIncidents.length === 0 ? (
         <Empty text={esCL.incidents.empty} />
       ) : (
-        <div className="card">
-          <IncidentList
-            data={incidents.data.data}
-            onStatus={(id, status) => change.mutate({ id, status })}
-          />
-        </div>
+        <>
+          <section className="card incident-filter-card" aria-label={esCL.incidents.filters}>
+            <div className="card-heading">
+              <div>
+                <h2>{esCL.incidents.filters}</h2>
+                <p>{esCL.incidents.showing(filteredIncidents.length, allIncidents.length)}</p>
+              </div>
+              <button
+                onClick={() =>
+                  setFilters({ search: '', status: '', severity: '', area: '', sensor: '' })
+                }
+                disabled={Object.values(filters).every((value) => !value)}
+              >
+                {esCL.incidents.clearFilters}
+              </button>
+            </div>
+            <div className="incident-filters">
+              <label>
+                {esCL.incidents.search}
+                <input
+                  value={filters.search}
+                  onChange={(event) =>
+                    setFilters((current) => ({ ...current, search: event.target.value }))
+                  }
+                  placeholder={esCL.incidents.searchPlaceholder}
+                />
+              </label>
+              <IncidentFilterSelect
+                label={esCL.incidents.status}
+                value={filters.status}
+                onChange={(value) => setFilters((current) => ({ ...current, status: value }))}
+                emptyLabel={esCL.incidents.allStatuses}
+                options={[
+                  ['OPEN', labelStatus('OPEN')],
+                  ['ACKNOWLEDGED', labelStatus('ACKNOWLEDGED')],
+                  ['RESOLVED', labelStatus('RESOLVED')],
+                ]}
+              />
+              <IncidentFilterSelect
+                label={esCL.incidents.severity}
+                value={filters.severity}
+                onChange={(value) => setFilters((current) => ({ ...current, severity: value }))}
+                emptyLabel={esCL.incidents.allSeverities}
+                options={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((severity) => [
+                  severity,
+                  labelSeverity(severity),
+                ])}
+              />
+              <IncidentFilterSelect
+                label={esCL.incidents.area}
+                value={filters.area}
+                onChange={(value) => setFilters((current) => ({ ...current, area: value }))}
+                emptyLabel={esCL.incidents.allAreas}
+                options={areas.map((area) => [area, area])}
+              />
+              <IncidentFilterSelect
+                label={esCL.incidents.sensor}
+                value={filters.sensor}
+                onChange={(value) => setFilters((current) => ({ ...current, sensor: value }))}
+                emptyLabel={esCL.incidents.allSensors}
+                options={sensorCodes.map((sensor) => [sensor, sensor])}
+              />
+            </div>
+          </section>
+          {filteredIncidents.length === 0 ? (
+            <Empty text={esCL.incidents.noMatching} />
+          ) : (
+            <div className="card">
+              <IncidentList
+                data={filteredIncidents}
+                onStatus={(id, status) => change.mutate({ id, status })}
+              />
+            </div>
+          )}
+        </>
       )}
     </section>
   );
@@ -687,7 +703,7 @@ function OrderBoard({
   );
 }
 
-function DashboardSelect({
+function IncidentFilterSelect({
   label,
   value,
   onChange,
@@ -715,55 +731,26 @@ function DashboardSelect({
   );
 }
 
-function IncidentTable({ data }: { data: IncidentResponse[] }) {
-  if (!data.length) return <p className="dashboard-empty">{esCL.dashboard.noMatchingIncidents}</p>;
+function PriorityIncidentList({ data }: { data: IncidentResponse[] }) {
+  if (!data.length) return <p className="dashboard-empty">{esCL.incidents.empty}</p>;
   return (
-    <div className="incident-table-wrap">
-      <table className="incident-table">
-        <thead>
-          <tr>
-            <th>{esCL.dashboard.incident}</th>
-            <th>{esCL.dashboard.sensor}</th>
-            <th>{esCL.dashboard.area}</th>
-            <th>{esCL.dashboard.readingRange}</th>
-            <th>{esCL.dashboard.severity}</th>
-            <th>{esCL.dashboard.status}</th>
-            <th>{esCL.dashboard.age}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((incident) => (
-            <tr key={incident.id}>
-              <td>
-                <Link className="incident-reference" to={`/incidents/${incident.id}`}>
-                  {incidentReference(incident.id)}
-                </Link>
-              </td>
-              <td>
-                <strong>{incident.sensorCode}</strong>
-              </td>
-              <td>{incident.areaName}</td>
-              <td className="reading-cell">
-                <strong>{incident.value}</strong>
-                <span>
-                  {incident.minValue}–{incident.maxValue}
-                </span>
-              </td>
-              <td>
-                <SeverityBadge severity={incident.severity} />
-              </td>
-              <td>
-                <StatusBadge status={incident.status} />
-              </td>
-              <td>
-                <time dateTime={incident.openedAt} title={formatDateTime(incident.openedAt)}>
-                  {incidentAge(incident.openedAt)}
-                </time>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="priority-list">
+      {data.map((incident) => (
+        <article className="priority-row" key={incident.id}>
+          <div>
+            <Link className="priority-link" to={`/incidents/${incident.id}`}>
+              {incident.sensorCode}
+            </Link>
+            <span>
+              {incident.areaName} · {incidentAge(incident.openedAt)}
+            </span>
+          </div>
+          <div className="row-actions">
+            <SeverityBadge severity={incident.severity} />
+            <StatusBadge status={incident.status} />
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
@@ -797,16 +784,16 @@ function OperationalDistribution({
   );
 }
 
-function incidentReference(id: string): string {
-  return `INC-${id.slice(0, 8).toUpperCase()}`;
-}
-
 function incidentAge(openedAt: string): string {
   const elapsedHours = Math.max(
     0,
     Math.floor((Date.now() - new Date(openedAt).getTime()) / 3_600_000),
   );
   return elapsedHours < 1 ? esCL.dashboard.lessThanOneHour : esCL.dashboard.hoursOpen(elapsedHours);
+}
+
+function incidentPriority(severity: string): number {
+  return { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }[severity] ?? 0;
 }
 
 function IncidentList({

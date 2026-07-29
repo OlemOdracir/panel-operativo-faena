@@ -253,27 +253,27 @@
   color: var(--accent);
   font-size: 0.82rem;
 }
-.dashboard-filter-card,
+.incident-filter-card,
 .dashboard-orders-card {
   margin-bottom: 16px;
 }
-.dashboard-filter-card .card-heading {
+.incident-filter-card .card-heading {
   align-items: flex-start;
   gap: 16px;
 }
-.dashboard-filters {
+.incident-filters {
   display: grid;
   grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr));
   gap: 10px;
 }
-.dashboard-filters label {
+.incident-filters label {
   display: grid;
   gap: 6px;
   color: var(--ink-muted);
   font-size: 0.75rem;
 }
-.dashboard-filters input,
-.dashboard-filters select {
+.incident-filters input,
+.incident-filters select {
   width: 100%;
 }
 .dashboard-primary-grid {
@@ -283,10 +283,7 @@
   gap: 16px;
   margin-bottom: 16px;
 }
-.dashboard-table-card {
-  min-width: 0;
-}
-.dashboard-table-card .card-heading {
+.dashboard-priorities-card .card-heading {
   align-items: flex-start;
   gap: 16px;
 }
@@ -294,62 +291,39 @@
   display: grid;
   gap: 16px;
 }
-.incident-table-wrap {
-  overflow-x: auto;
-}
-.incident-table {
-  width: 100%;
-  min-width: 760px;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-.incident-table th,
-.incident-table td {
-  padding: 12px 10px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.incident-table th {
-  color: var(--ink-muted);
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.incident-table td {
-  color: var(--ink-muted);
-}
-.incident-table td strong {
-  color: var(--ink-strong);
-}
-.incident-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-.incident-table tbody tr:hover {
-  background: rgb(255 255 255 / 2%);
-}
-.incident-reference {
-  color: var(--accent);
-  font-family: var(--mono);
-  font-weight: 700;
-  text-decoration: none;
-}
-.reading-cell strong,
-.reading-cell span {
-  display: block;
-}
-.reading-cell span {
-  margin-top: 2px;
-  color: var(--ink-muted);
-  font-size: 0.74rem;
-}
 .dashboard-empty {
   margin: 0;
   padding: 28px 0 8px;
   color: var(--ink-muted);
   text-align: center;
+}
+.priority-list {
+  display: grid;
+}
+.priority-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+}
+.priority-row:last-child {
+  border-bottom: 0;
+}
+.priority-link {
+  color: var(--ink-strong);
+  font-weight: 750;
+  text-decoration: none;
+}
+.priority-link:hover {
+  color: var(--accent);
+}
+.priority-row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
 }
 .distribution-card h2 {
   margin: 0 0 16px;
@@ -583,7 +557,7 @@ button:disabled {
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .dashboard-filters {
+  .incident-filters {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .dashboard-primary-grid {
@@ -644,11 +618,11 @@ button:disabled {
   .dashboard-actions {
     justify-content: flex-start;
   }
-  .dashboard-filters {
+  .incident-filters {
     grid-template-columns: 1fr;
   }
-  .dashboard-filter-card .card-heading,
-  .dashboard-table-card .card-heading {
+  .incident-filter-card .card-heading,
+  .dashboard-priorities-card .card-heading {
     align-items: flex-start;
     flex-direction: column;
   }

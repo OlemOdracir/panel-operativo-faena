@@ -31,7 +31,9 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   await page.getByRole('button', { name: 'Ingresar' }).click();
 
   await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
-  await expect(page.getByText('Incidentes abiertos')).toBeVisible();
+  await expect(page.getByText('Incidentes abiertos', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Prioridades operativas' })).toBeVisible();
+  await expect(page.getByText('Filtrar incidentes')).toHaveCount(0);
   await expect(page.getByText('No se pudo cargar el resumen')).toHaveCount(0);
 
   const sessionCookie = (await page.context().cookies()).find(
@@ -40,7 +42,8 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   expect(sessionCookie?.httpOnly).toBe(true);
 
   await page.getByRole('link', { name: 'Incidentes' }).click();
-  await expect(page.getByRole('heading', { name: 'Incidentes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Filtrar incidentes' })).toBeVisible();
   await expect(page.locator('.list-row').first()).toBeVisible();
 
   await page.getByRole('link', { name: 'Órdenes de trabajo' }).click();
