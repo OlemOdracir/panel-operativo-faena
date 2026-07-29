@@ -321,6 +321,7 @@ function Panel({ user }: { user: UserResponse }) {
           ml: mobile ? 0 : `${expanded ? drawerWidth : collapsedDrawerWidth}px`,
           transition: 'margin-left 160ms ease',
           pt: '72px',
+          pb: 8,
         }}
       >
         <Box sx={{ flex: 1, p: { xs: 2, md: 4 }, maxWidth: 1800, width: '100%', mx: 'auto' }}>
@@ -336,10 +337,16 @@ function Panel({ user }: { user: UserResponse }) {
           component="footer"
           role="contentinfo"
           sx={{
+            position: 'fixed',
+            left: mobile ? 0 : `${expanded ? drawerWidth : collapsedDrawerWidth}px`,
+            right: 0,
+            bottom: 0,
+            zIndex: (muiTheme) => muiTheme.zIndex.appBar,
             borderTop: 1,
             borderColor: 'divider',
             px: { xs: 2, md: 4 },
             py: 2,
+            bgcolor: 'background.default',
             display: 'flex',
             justifyContent: 'space-between',
             gap: 2,
