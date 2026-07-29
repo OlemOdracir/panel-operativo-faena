@@ -16,13 +16,14 @@
     "format:check": "prettier --check .",
     "lint": "corepack pnpm --recursive --if-present run lint",
     "typecheck": "corepack pnpm --recursive --if-present run typecheck",
-    "test": "corepack pnpm --recursive --if-present run test:ci",
+    "test": "corepack pnpm --filter @faena/contracts build && corepack pnpm --recursive --if-present run test:ci",
     "test:e2e:audit": "playwright test --config playwright.config.ts",
     "prepare": "husky",
     "compose:up": "docker compose up --build",
     "compose:down": "docker compose down",
     "compose:logs": "docker compose logs --follow",
-    "docs:check": "node scripts/check-openapi.mjs"
+    "docs:check": "node scripts/check-openapi.mjs",
+    "encoding:check": "node scripts/check-encoding.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",

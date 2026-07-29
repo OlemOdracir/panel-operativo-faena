@@ -85,6 +85,7 @@ Las reglas críticas se desarrollan con pruebas automatizadas, las entradas se v
 
 ```powershell
 corepack pnpm format:check
+corepack pnpm encoding:check
 corepack pnpm lint
 corepack pnpm typecheck
 corepack pnpm test
@@ -102,6 +103,7 @@ Resultados actuales: backend sobre 85% de cobertura global; frontend sobre 80% e
 | Control              | Herramienta                          | Propósito                                                           |
 | -------------------- | ------------------------------------ | ------------------------------------------------------------------- |
 | Formato              | Prettier                             | Mantener un estilo uniforme en todo el monorepo                     |
+| Codificación         | `encoding:check`                     | Exigir UTF-8 válido y detectar caracteres de reemplazo o mojibake   |
 | Análisis backend     | ESLint y TypeScript ESLint           | Detectar errores, tipos inseguros y malas prácticas                 |
 | Análisis frontend    | Oxlint                               | Revisar React y TypeScript sin advertencias                         |
 | Tipado               | TypeScript estricto                  | Verificar contratos y evitar `any` explícito                        |
@@ -156,12 +158,14 @@ El generador no contiene reglas de incidentes: solo publica lecturas en la API.
 ```text
 apps/api                 NestJS, dominios, Prisma y seguridad
 apps/web                 React, rutas, vistas y TanStack Query
-packages/contracts       esquemas Zod y tipos compartidos
+packages/contracts       esquemas Zod, tipos y catálogo i18n `esCL` compartidos
 tools/reading-generator  simulador Python/pandas
 docs                     arquitectura, seguridad y API
 ```
 
 La interfaz usa Tailwind CSS 4 mediante `@tailwindcss/vite`, con tokens visuales definidos en `apps/web/src/index.css`. Los estilos específicos del dominio permanecen en `App.css` mientras la migración se completa por componentes.
+
+Los textos de interfaz, etiquetas de roles/estados/severidades y mensajes API se centralizan en `packages/contracts/src/i18n.ts`. Los enums de la base y de la API se mantienen en inglés como contratos estables, y se traducen a español de Chile solo al presentarlos. `.editorconfig` declara UTF-8 y `corepack pnpm encoding:check` evita que se versionen caracteres de reemplazo o texto mal decodificado.
 
 La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md), los patrones aplicados en [`docs/architecture-patterns.md`](docs/architecture-patterns.md) y los ADR en [`docs/adr/`](docs/adr/). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md) y el modelo de amenazas en [`docs/threat-model.md`](docs/threat-model.md).
 

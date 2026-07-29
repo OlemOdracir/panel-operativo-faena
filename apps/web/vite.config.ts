@@ -13,6 +13,7 @@ export default defineConfig({
     port: 4173,
   },
   test: {
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**', 'coverage/**'],
     coverage: {
       exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.spec.{ts,tsx}'],
       include: ['src/**/*.{ts,tsx}'],
