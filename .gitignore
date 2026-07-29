@@ -31,6 +31,7 @@ Thumbs.db
 .postgres-data/
 tmp/
 temp/
+audit/
 
 # Python tooling output
 __pycache__/
