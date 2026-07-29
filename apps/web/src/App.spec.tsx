@@ -48,6 +48,80 @@ describe('App', () => {
     expect(screen.getByText('Supervisión · Supervisor')).toBeInTheDocument();
   });
 
+  it('presents the dashboard incidents as a filterable operational table', async () => {
+    const user = userEvent.setup();
+    const incidents = [
+      {
+        id: '11111111-0000-4000-8000-000000000071',
+        status: 'OPEN',
+        severity: 'CRITICAL',
+        sensorId: '00000000-0000-4000-8000-000000000081',
+        sensorCode: 'CHA-PRES-01',
+        areaName: 'Chancado',
+        value: 15,
+        minValue: 2,
+        maxValue: 10,
+        openedAt: '2026-07-28T00:00:00.000Z',
+        acknowledgedAt: null,
+        resolvedAt: null,
+        acknowledgedBy: null,
+        resolvedBy: null,
+      },
+      {
+        id: '22222222-0000-4000-8000-000000000072',
+        status: 'ACKNOWLEDGED',
+        severity: 'MEDIUM',
+        sensorId: '00000000-0000-4000-8000-000000000082',
+        sensorCode: 'MOL-VIB-01',
+        areaName: 'Molienda',
+        value: 13,
+        minValue: 0,
+        maxValue: 12,
+        openedAt: '2026-07-28T01:00:00.000Z',
+        acknowledgedAt: '2026-07-28T02:00:00.000Z',
+        resolvedAt: null,
+        acknowledgedBy: 'Supervisión',
+        resolvedBy: null,
+      },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents')) {
+          return new Response(
+            JSON.stringify({
+              data: incidents,
+              meta: { page: 1, pageSize: 20, total: 2, totalPages: 1 },
+            }),
+          );
+        }
+        if (url.includes('/work-orders')) {
+          return new Response(
+            JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+          );
+        }
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('INC-11111111')).toBeInTheDocument());
+    expect(screen.getByRole('columnheader', { name: 'Lectura / rango' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Área' }), 'Molienda');
+    expect(screen.queryByRole('link', { name: 'INC-11111111' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'INC-22222222' })).toBeInTheDocument();
+  });
+
   it('provides the query client to the component tree', () => {
     render(
       <AppProviders>

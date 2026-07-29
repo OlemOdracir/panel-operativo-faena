@@ -9,8 +9,8 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { LayoutDashboard, ListTodo, Radio, TriangleAlert } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { LayoutDashboard, ListTodo, Radio, RefreshCw, TriangleAlert } from 'lucide-react';
 import {
   esCL,
   formatDateTime,
@@ -26,6 +26,9 @@ import { authQueryKeys } from './features/auth/query-keys';
 import { catalogQueryKeys } from './features/catalog/query-keys';
 import { incidentQueryKeys } from './features/incidents/query-keys';
 import { workOrderQueryKeys } from './features/work-orders/query-keys';
+
+const emptyIncidents: IncidentResponse[] = [];
+const emptyWorkOrders: WorkOrderResponse[] = [];
 
 function App() {
   const me = useQuery({ queryKey: authQueryKeys.me, queryFn: api.me, retry: false });
@@ -96,6 +99,13 @@ function Panel({ user }: { user: UserResponse }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const incidentSummary = useQuery({
+    queryKey: incidentQueryKeys.all,
+    queryFn: () => api.incidents(),
+    refetchInterval: 15_000,
+  });
+  const openIncidentCount =
+    incidentSummary.data?.data.filter((incident) => incident.status !== 'RESOLVED').length ?? 0;
   const logout = useMutation({
     mutationFn: api.logout,
     onSuccess: async () => {
@@ -134,7 +144,8 @@ function Panel({ user }: { user: UserResponse }) {
             to="/incidents"
           >
             <TriangleAlert aria-hidden="true" className="nav-icon" size={18} strokeWidth={1.75} />
-            {esCL.navigation.incidents}
+            <span>{esCL.navigation.incidents}</span>
+            {openIncidentCount > 0 && <span className="nav-count">{openIncidentCount}</span>}
           </Link>
           <Link
             className={location.pathname.startsWith('/work-orders') ? 'active' : ''}
@@ -174,6 +185,44 @@ function Dashboard() {
     queryFn: api.sensors,
     refetchInterval: 15_000,
   });
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    severity: '',
+    area: '',
+    sensor: '',
+  });
+  const allIncidents = incidents.data?.data ?? emptyIncidents;
+  const allOrders = orders.data?.data ?? emptyWorkOrders;
+  const areas = [...new Set(allIncidents.map((incident) => incident.areaName))].sort();
+  const sensorCodes = [...new Set(allIncidents.map((incident) => incident.sensorCode))].sort();
+  const filteredIncidents = useMemo(() => {
+    const search = filters.search.trim().toLocaleLowerCase(esCL.locale);
+    return allIncidents.filter((incident) => {
+      const matchesSearch =
+        !search ||
+        `${incidentReference(incident.id)} ${incident.sensorCode} ${incident.areaName}`
+          .toLocaleLowerCase(esCL.locale)
+          .includes(search);
+      return (
+        matchesSearch &&
+        (!filters.status || incident.status === filters.status) &&
+        (!filters.severity || incident.severity === filters.severity) &&
+        (!filters.area || incident.areaName === filters.area) &&
+        (!filters.sensor || incident.sensorCode === filters.sensor)
+      );
+    });
+  }, [allIncidents, filters]);
+  const inProgressOrders = allOrders.filter((order) => order.status === 'IN_PROGRESS').length;
+  const latestUpdate = Math.max(
+    incidents.dataUpdatedAt,
+    orders.dataUpdatedAt,
+    sensors.dataUpdatedAt,
+  );
+  const isRefreshing = incidents.isFetching || orders.isFetching || sensors.isFetching;
+  const refresh = () => {
+    void Promise.all([incidents.refetch(), orders.refetch(), sensors.refetch()]);
+  };
   if (incidents.isPending || orders.isPending || sensors.isPending)
     return <PageMessage title={esCL.dashboard.loadingTitle} text={esCL.dashboard.loadingText} />;
   if (incidents.isError || orders.isError || sensors.isError)
@@ -185,46 +234,140 @@ function Dashboard() {
           <span className="eyebrow">{esCL.dashboard.eyebrow}</span>
           <h1>{esCL.dashboard.title}</h1>
         </div>
-        <span className="live-dot">
-          <Radio aria-hidden="true" size={16} strokeWidth={1.75} />
-          {esCL.dashboard.live}
-        </span>
+        <div className="dashboard-actions">
+          <span className="live-dot">
+            <Radio aria-hidden="true" size={16} strokeWidth={1.75} />
+            {esCL.dashboard.live}
+          </span>
+          <span className="updated-at">
+            {esCL.dashboard.updatedAt}: {formatDateTime(new Date(latestUpdate).toISOString())}
+          </span>
+          <button className="refresh-button" onClick={refresh} disabled={isRefreshing}>
+            <RefreshCw aria-hidden="true" size={15} className={isRefreshing ? 'spinning' : ''} />
+            {isRefreshing ? esCL.dashboard.refreshing : esCL.dashboard.refresh}
+          </button>
+        </div>
       </div>
       <div className="metrics">
         <Metric
           label={esCL.dashboard.openIncidents}
-          value={incidents.data.data.filter((item) => item.status !== 'RESOLVED').length}
+          value={allIncidents.filter((item) => item.status !== 'RESOLVED').length}
           tone="danger"
         />
         <Metric
           label={esCL.dashboard.activeWorkOrders}
-          value={orders.data.data.filter((item) => item.status !== 'CLOSED').length}
+          value={allOrders.filter((item) => item.status !== 'CLOSED').length}
           tone="accent"
+          hint={esCL.dashboard.inProgressHint(inProgressOrders)}
         />
         <Metric label={esCL.dashboard.activeSensors} value={sensors.data.length} tone="quiet" />
         <Metric
           label={esCL.dashboard.averageClosureTime}
-          value={averageClosureHours(orders.data.data)}
+          value={averageClosureHours(allOrders)}
           tone="quiet"
           suffix=" h"
         />
       </div>
-      <div className="two-columns">
-        <section className="card">
+      <section className="card dashboard-filter-card" aria-label={esCL.dashboard.filters}>
+        <div className="card-heading">
+          <div>
+            <h2>{esCL.dashboard.filters}</h2>
+            <p>{esCL.dashboard.showing(filteredIncidents.length, allIncidents.length)}</p>
+          </div>
+          <button
+            onClick={() =>
+              setFilters({ search: '', status: '', severity: '', area: '', sensor: '' })
+            }
+            disabled={Object.values(filters).every((value) => !value)}
+          >
+            {esCL.dashboard.clearFilters}
+          </button>
+        </div>
+        <div className="dashboard-filters">
+          <label>
+            {esCL.dashboard.search}
+            <input
+              value={filters.search}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, search: event.target.value }))
+              }
+              placeholder={esCL.dashboard.searchPlaceholder}
+            />
+          </label>
+          <DashboardSelect
+            label={esCL.dashboard.status}
+            value={filters.status}
+            onChange={(value) => setFilters((current) => ({ ...current, status: value }))}
+            emptyLabel={esCL.dashboard.allStatuses}
+            options={[
+              ['OPEN', labelStatus('OPEN')],
+              ['ACKNOWLEDGED', labelStatus('ACKNOWLEDGED')],
+              ['RESOLVED', labelStatus('RESOLVED')],
+            ]}
+          />
+          <DashboardSelect
+            label={esCL.dashboard.severity}
+            value={filters.severity}
+            onChange={(value) => setFilters((current) => ({ ...current, severity: value }))}
+            emptyLabel={esCL.dashboard.allSeverities}
+            options={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((severity) => [
+              severity,
+              labelSeverity(severity),
+            ])}
+          />
+          <DashboardSelect
+            label={esCL.dashboard.area}
+            value={filters.area}
+            onChange={(value) => setFilters((current) => ({ ...current, area: value }))}
+            emptyLabel={esCL.dashboard.allAreas}
+            options={areas.map((area) => [area, area])}
+          />
+          <DashboardSelect
+            label={esCL.dashboard.sensor}
+            value={filters.sensor}
+            onChange={(value) => setFilters((current) => ({ ...current, sensor: value }))}
+            emptyLabel={esCL.dashboard.allSensors}
+            options={sensorCodes.map((sensor) => [sensor, sensor])}
+          />
+        </div>
+      </section>
+      <div className="dashboard-primary-grid">
+        <section className="card dashboard-table-card">
           <div className="card-heading">
-            <h2>{esCL.dashboard.latestIncidents}</h2>
+            <div>
+              <h2>{esCL.dashboard.incidentsToManage}</h2>
+              <p>{esCL.dashboard.incidentTableDescription}</p>
+            </div>
             <Link to="/incidents">{esCL.dashboard.seeAll}</Link>
           </div>
-          <IncidentList data={incidents.data.data.slice(0, 5)} />
+          <IncidentTable data={filteredIncidents} />
         </section>
-        <section className="card">
-          <div className="card-heading">
-            <h2>{esCL.dashboard.recentWorkOrders}</h2>
-            <Link to="/work-orders">{esCL.dashboard.seeAllFeminine}</Link>
-          </div>
-          <OrderList data={orders.data.data.slice(0, 5)} />
-        </section>
+        <aside className="dashboard-summary-stack">
+          <OperationalDistribution
+            title={esCL.dashboard.severityDistribution}
+            entries={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((severity) => ({
+              label: labelSeverity(severity),
+              value: allIncidents.filter((incident) => incident.severity === severity).length,
+              tone: severity.toLowerCase(),
+            }))}
+          />
+          <OperationalDistribution
+            title={esCL.dashboard.workOrderSummary}
+            entries={['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'CLOSED'].map((status) => ({
+              label: labelStatus(status),
+              value: allOrders.filter((order) => order.status === status).length,
+              tone: status.toLowerCase(),
+            }))}
+          />
+        </aside>
       </div>
+      <section className="card dashboard-orders-card">
+        <div className="card-heading">
+          <h2>{esCL.dashboard.recentWorkOrders}</h2>
+          <Link to="/work-orders">{esCL.dashboard.seeAllFeminine}</Link>
+        </div>
+        <OrderList data={allOrders.slice(0, 5)} />
+      </section>
     </section>
   );
 }
@@ -544,6 +687,128 @@ function OrderBoard({
   );
 }
 
+function DashboardSelect({
+  label,
+  value,
+  onChange,
+  emptyLabel,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  emptyLabel: string;
+  options: Array<[string, string]>;
+}) {
+  return (
+    <label>
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">{emptyLabel}</option>
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function IncidentTable({ data }: { data: IncidentResponse[] }) {
+  if (!data.length) return <p className="dashboard-empty">{esCL.dashboard.noMatchingIncidents}</p>;
+  return (
+    <div className="incident-table-wrap">
+      <table className="incident-table">
+        <thead>
+          <tr>
+            <th>{esCL.dashboard.incident}</th>
+            <th>{esCL.dashboard.sensor}</th>
+            <th>{esCL.dashboard.area}</th>
+            <th>{esCL.dashboard.readingRange}</th>
+            <th>{esCL.dashboard.severity}</th>
+            <th>{esCL.dashboard.status}</th>
+            <th>{esCL.dashboard.age}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((incident) => (
+            <tr key={incident.id}>
+              <td>
+                <Link className="incident-reference" to={`/incidents/${incident.id}`}>
+                  {incidentReference(incident.id)}
+                </Link>
+              </td>
+              <td>
+                <strong>{incident.sensorCode}</strong>
+              </td>
+              <td>{incident.areaName}</td>
+              <td className="reading-cell">
+                <strong>{incident.value}</strong>
+                <span>
+                  {incident.minValue}–{incident.maxValue}
+                </span>
+              </td>
+              <td>
+                <SeverityBadge severity={incident.severity} />
+              </td>
+              <td>
+                <StatusBadge status={incident.status} />
+              </td>
+              <td>
+                <time dateTime={incident.openedAt} title={formatDateTime(incident.openedAt)}>
+                  {incidentAge(incident.openedAt)}
+                </time>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OperationalDistribution({
+  title,
+  entries,
+}: {
+  title: string;
+  entries: Array<{ label: string; value: number; tone: string }>;
+}) {
+  const largestValue = Math.max(...entries.map((entry) => entry.value), 1);
+  return (
+    <section className="card distribution-card">
+      <h2>{title}</h2>
+      <ul className="distribution-list">
+        {entries.map((entry) => (
+          <li key={entry.tone}>
+            <span>{entry.label}</span>
+            <span className="distribution-track" aria-hidden="true">
+              <span
+                className={`distribution-bar distribution-${entry.tone}`}
+                style={{ width: `${(entry.value / largestValue) * 100}%` }}
+              />
+            </span>
+            <strong>{entry.value}</strong>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function incidentReference(id: string): string {
+  return `INC-${id.slice(0, 8).toUpperCase()}`;
+}
+
+function incidentAge(openedAt: string): string {
+  const elapsedHours = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(openedAt).getTime()) / 3_600_000),
+  );
+  return elapsedHours < 1 ? esCL.dashboard.lessThanOneHour : esCL.dashboard.hoursOpen(elapsedHours);
+}
+
 function IncidentList({
   data,
   onStatus,
@@ -650,11 +915,13 @@ function Metric({
   value,
   tone,
   suffix = '',
+  hint,
 }: {
   label: string;
   value: number;
   tone: string;
   suffix?: string;
+  hint?: string;
 }) {
   return (
     <article className={`metric ${tone}`}>
@@ -663,6 +930,7 @@ function Metric({
         {value}
         {suffix}
       </strong>
+      {hint && <small>{hint}</small>}
     </article>
   );
 }
