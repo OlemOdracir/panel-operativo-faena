@@ -18,6 +18,20 @@ jobs:
     name: Quality checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: faena_test
+          POSTGRES_USER: faena_app
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U faena_app -d faena_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout repository
@@ -56,10 +70,24 @@ jobs:
 
       - name: Validate Prisma schema
         env:
-          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena?schema=public
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
         run: pnpm --filter @faena/api exec prisma validate --config prisma.config.ts
 
+      - name: Apply migrations and seed test database
+        env:
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
+          JWT_SECRET: ci-only-secret-that-is-longer-than-32-characters
+          SEED_ADMIN_PASSWORD: ci-admin-password
+          SEED_SUPERVISOR_PASSWORD: ci-supervisor-password
+        run: |
+          pnpm --filter @faena/api prisma:migrate
+          pnpm --filter @faena/api prisma:seed
+
       - name: Test
+        env:
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
+          JWT_SECRET: ci-only-secret-that-is-longer-than-32-characters
+          RUN_DB_INTEGRATION: 'true'
         run: pnpm test
 
       - name: Build

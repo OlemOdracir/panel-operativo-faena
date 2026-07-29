@@ -12,9 +12,9 @@ void describe('Health endpoint (e2e)', () => {
   let app: INestApplication<App>;
 
   void beforeEach(async () => {
-    process.env.DATABASE_URL = 'postgresql://user:password@localhost:5432/faena';
-    process.env.JWT_SECRET = 'a-development-only-secret-over-32-characters';
-    process.env.SWAGGER_ENABLED = 'true';
+    process.env.DATABASE_URL ??= 'postgresql://user:password@localhost:5432/faena';
+    process.env.JWT_SECRET ??= 'a-development-only-secret-over-32-characters';
+    process.env.SWAGGER_ENABLED ??= 'true';
 
     const { AppModule } = await import('./../src/app.module.js');
     const moduleFixture: TestingModule = await Test.createTestingModule({
