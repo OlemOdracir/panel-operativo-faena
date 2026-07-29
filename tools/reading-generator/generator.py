@@ -7,6 +7,7 @@ import os
 import time
 from datetime import datetime, timezone
 from typing import Any
+from typing import TypedDict
 
 import pandas as pd
 import requests
@@ -16,6 +17,12 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(
 LOGGER = logging.getLogger("faena-reading-generator")
 
 
+class SensorRange(TypedDict):
+    id: str
+    minValue: float
+    maxValue: float
+
+
 def required(name: str) -> str:
     value = os.getenv(name)
     if not value:
@@ -23,8 +30,8 @@ def required(name: str) -> str:
     return value
 
 
-def build_batch(sensor_ids: list[str], count: int, outlier_ratio: float) -> pd.DataFrame:
-    if not sensor_ids:
+def build_batch(sensors: list[SensorRange], count: int, outlier_ratio: float) -> pd.DataFrame:
+    if not sensors:
         raise ValueError("At least one sensor is required")
     if count < 1:
         raise ValueError("Batch size must be positive")
@@ -34,9 +41,18 @@ def build_batch(sensor_ids: list[str], count: int, outlier_ratio: float) -> pd.D
     now = datetime.now(timezone.utc)
     rows: list[dict[str, Any]] = []
     for index in range(count):
-        sensor_id = sensor_ids[index % len(sensor_ids)]
+        sensor = sensors[index % len(sensors)]
         is_outlier = (index % max(1, round(1 / max(outlier_ratio, 0.01)))) == 0 if outlier_ratio else False
-        rows.append({"sensorId": sensor_id, "value": 999.0 if is_outlier else 5.0, "measuredAt": now.isoformat()})
+        sensor_range = sensor["maxValue"] - sensor["minValue"]
+        normal_value = sensor["minValue"] + sensor_range / 2
+        outlier_value = sensor["maxValue"] + max(sensor_range * 0.2, 1.0)
+        rows.append(
+            {
+                "sensorId": sensor["id"],
+                "value": outlier_value if is_outlier else normal_value,
+                "measuredAt": now.isoformat(),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -56,12 +72,19 @@ def run() -> None:
     login.raise_for_status()
     sensors = session.get(f"{base_url}/sensors", timeout=10)
     sensors.raise_for_status()
-    sensor_ids = [item["id"] for item in sensors.json()]
-    if not sensor_ids:
+    sensor_catalog: list[SensorRange] = [
+        {
+            "id": item["id"],
+            "minValue": float(item["minValue"]),
+            "maxValue": float(item["maxValue"]),
+        }
+        for item in sensors.json()
+    ]
+    if not sensor_catalog:
         raise RuntimeError("The API returned no sensors")
 
     while True:
-        batch = build_batch(sensor_ids, count, outlier_ratio)
+        batch = build_batch(sensor_catalog, count, outlier_ratio)
         for payload in batch.to_dict(orient="records"):
             response = session.post(f"{base_url}/readings", json=payload, headers={"X-CSRF-Token": token}, timeout=10)
             response.raise_for_status()

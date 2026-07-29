@@ -11,4 +11,6 @@ faena-reading-generator
 
 Para ejecutar sus pruebas: `pip install -e ".[test]"` y `python -m pytest -q`.
 
-El generador solo envía `POST /readings`. La detección y apertura de incidentes permanece en la API.
+El generador obtiene los rangos desde `GET /sensors`: publica valores normales en el punto medio de
+cada rango y outliers por encima del máximo. Solo envía `POST /readings`; la detección y apertura de
+incidentes permanece en la API.
