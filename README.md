@@ -63,6 +63,24 @@ corepack pnpm --filter @faena/api prisma:seed
 
 En Windows, si una política de seguridad bloquea el binario nativo de Prisma, ejecuta las migraciones mediante `docker compose up`; el contenedor Linux es el entorno soportado y reproducible.
 
+## Metodología de desarrollo
+
+El proyecto sigue un desarrollo incremental orientado a funcionalidades: cada cambio vertical incorpora contrato, regla de negocio, persistencia, API, interfaz, pruebas y documentación cuando corresponde. La historia Git utiliza Conventional Commits para que el repositorio explique la evolución del sistema.
+
+La arquitectura combina un monolito modular con separación Presentation–Domain–Data y principios ligeros de Clean Architecture:
+
+```text
+Presentación (React y controladores NestJS)
+                    ↓
+Aplicación (servicios y casos de uso)
+                    ↓
+Dominio (reglas y máquinas de estado)
+                    ↓
+Infraestructura (Prisma y PostgreSQL)
+```
+
+Las reglas críticas se desarrollan con pruebas automatizadas, las entradas se validan antes de acceder a datos y cada Pull Request debe superar los gates de CI. No se incorporan CQRS, Event Sourcing ni microservicios porque no aportan valor proporcional al alcance actual.
+
 ## Comandos de calidad
 
 ```powershell
@@ -74,9 +92,26 @@ corepack pnpm build
 corepack pnpm docs:check
 ```
 
-La suite API incluye pruebas de dominio, seguridad y ciclo de vida. La integración real de PostgreSQL se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed. El frontend cubre los estados de carga, error, vacío y contenido; su umbral inicial es 40% y se incrementa junto con nuevas vistas.
+La suite API incluye pruebas de dominio, seguridad, ciclo de vida e integración real con PostgreSQL. Esta última se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed. El frontend cubre los estados de carga, error, vacío y contenido, además de las mutaciones operacionales y el cierre de sesión.
 
-La cobertura del frontend mantiene umbrales mínimos de 65% en ramas, líneas y sentencias y 50% en funciones. El objetivo de evolución es alcanzar 80% global.
+Resultados actuales: backend sobre 85% de cobertura global; frontend sobre 80% en sentencias y líneas, 85% en ramas y 71% en funciones.
+
+| Control              | Herramienta                          | Propósito                                                    |
+| -------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| Formato              | Prettier                             | Mantener un estilo uniforme en todo el monorepo              |
+| Análisis backend     | ESLint y TypeScript ESLint           | Detectar errores, tipos inseguros y malas prácticas          |
+| Análisis frontend    | Oxlint                               | Revisar React y TypeScript sin advertencias                  |
+| Tipado               | TypeScript estricto                  | Verificar contratos y evitar `any` explícito                 |
+| Validación           | Zod                                  | Validar entradas y respuestas en tiempo de ejecución         |
+| Pruebas backend      | Node Test Runner                     | Cubrir dominio, servicios, seguridad e integración           |
+| Pruebas frontend     | Vitest y Testing Library             | Verificar estados, formularios y acciones del usuario        |
+| Cobertura            | V8 Coverage                          | Impedir regresiones de cobertura                             |
+| Persistencia         | Prisma Validate y migraciones reales | Comprobar esquema y compatibilidad con PostgreSQL            |
+| Dependencias         | `pnpm audit`                         | Rechazar vulnerabilidades productivas de severidad alta      |
+| Historial Git        | Commitlint, Husky y lint-staged      | Aplicar Conventional Commits y formato antes del commit      |
+| API                  | OpenAPI check                        | Verificar que la referencia incluya los endpoints requeridos |
+| Contenedores         | Docker Compose validation            | Comprobar que la definición de servicios sea válida          |
+| Integración continua | GitHub Actions                       | Ejecutar todos los controles desde un entorno limpio         |
 
 ## API principal
 
