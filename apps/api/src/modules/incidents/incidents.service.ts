@@ -8,9 +8,15 @@ import { canAdvanceIncident } from './domain/incident.rules';
 type IncidentFilters = {
   page: number;
   pageSize: number;
-  status?: string;
+  status?: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED';
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   areaId?: string;
   sensorId?: string;
+  q?: string;
+  openedFrom?: string;
+  openedTo?: string;
+  sortBy?: 'openedAt' | 'severity' | 'status';
+  sortDirection?: 'asc' | 'desc';
 };
 type IncidentWithRelations = Prisma.IncidentGetPayload<{
   include: {
@@ -27,16 +33,36 @@ export class IncidentsService {
 
   async list(filters: IncidentFilters) {
     const status = filters.status ? incidentStatusSchema.parse(filters.status) : undefined;
-    const where = {
+    const where: Prisma.IncidentWhereInput = {
       ...(status ? { status } : {}),
+      ...(filters.severity ? { severity: filters.severity } : {}),
       ...(filters.sensorId ? { sensorId: filters.sensorId } : {}),
       ...(filters.areaId ? { sensor: { areaId: filters.areaId } } : {}),
+      ...(filters.q
+        ? {
+            OR: [
+              { sensor: { code: { contains: filters.q, mode: 'insensitive' } } },
+              { sensor: { name: { contains: filters.q, mode: 'insensitive' } } },
+              { sensor: { area: { name: { contains: filters.q, mode: 'insensitive' } } } },
+            ],
+          }
+        : {}),
+      ...(filters.openedFrom || filters.openedTo
+        ? {
+            openedAt: {
+              ...(filters.openedFrom ? { gte: new Date(filters.openedFrom) } : {}),
+              ...(filters.openedTo ? { lte: new Date(filters.openedTo) } : {}),
+            },
+          }
+        : {}),
     };
+    const sortBy = filters.sortBy ?? 'openedAt';
+    const sortDirection = filters.sortDirection ?? 'desc';
     const [data, total] = await this.prisma.$transaction([
       this.prisma.incident.findMany({
         where,
         include: this.include(),
-        orderBy: { openedAt: 'desc' },
+        orderBy: { [sortBy]: sortDirection },
         skip: (filters.page - 1) * filters.pageSize,
         take: filters.pageSize,
       }),

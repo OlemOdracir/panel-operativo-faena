@@ -11,6 +11,12 @@ type WorkOrderFilters = {
   status?: WorkOrderStatus[];
   teamId?: string;
   incidentId?: string;
+  priority?: Priority;
+  q?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  sortBy?: 'createdAt' | 'priority' | 'status';
+  sortDirection?: 'asc' | 'desc';
 };
 type WorkOrderWithRelations = Prisma.WorkOrderGetPayload<{
   include: { team: true; createdBy: true; incident: true };
@@ -21,16 +27,36 @@ export class WorkOrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(filters: WorkOrderFilters) {
-    const where = {
+    const where: Prisma.WorkOrderWhereInput = {
       ...(filters.status?.length ? { status: { in: filters.status } } : {}),
       ...(filters.teamId ? { teamId: filters.teamId } : {}),
       ...(filters.incidentId ? { incidentId: filters.incidentId } : {}),
+      ...(filters.priority ? { priority: filters.priority } : {}),
+      ...(filters.q
+        ? {
+            OR: [
+              { title: { contains: filters.q, mode: 'insensitive' } },
+              { description: { contains: filters.q, mode: 'insensitive' } },
+              { team: { name: { contains: filters.q, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
+      ...(filters.createdFrom || filters.createdTo
+        ? {
+            createdAt: {
+              ...(filters.createdFrom ? { gte: new Date(filters.createdFrom) } : {}),
+              ...(filters.createdTo ? { lte: new Date(filters.createdTo) } : {}),
+            },
+          }
+        : {}),
     };
+    const sortBy = filters.sortBy ?? 'createdAt';
+    const sortDirection = filters.sortDirection ?? 'desc';
     const [data, total] = await this.prisma.$transaction([
       this.prisma.workOrder.findMany({
         where,
         include: this.include(),
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy]: sortDirection },
         skip: (filters.page - 1) * filters.pageSize,
         take: filters.pageSize,
       }),

@@ -37,12 +37,35 @@ const paginationFields = {
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 };
 
-export const incidentListQuerySchema = z.strictObject({
-  ...paginationFields,
-  status: incidentStatusSchema.optional(),
-  areaId: uuidSchema.optional(),
-  sensorId: uuidSchema.optional(),
-});
+const searchField = z.string().trim().min(1).max(120).optional();
+const sortDirectionSchema = z.enum(['asc', 'desc']).default('desc');
+const dateFilterSchema = z.string().datetime({ offset: true }).optional();
+
+export const incidentSortFieldSchema = z.enum(['openedAt', 'severity', 'status']);
+export const workOrderSortFieldSchema = z.enum(['createdAt', 'priority', 'status']);
+
+export const incidentListQuerySchema = z
+  .strictObject({
+    ...paginationFields,
+    status: incidentStatusSchema.optional(),
+    severity: incidentSeveritySchema.optional(),
+    areaId: uuidSchema.optional(),
+    sensorId: uuidSchema.optional(),
+    q: searchField,
+    openedFrom: dateFilterSchema,
+    openedTo: dateFilterSchema,
+    sortBy: incidentSortFieldSchema.default('openedAt'),
+    sortDirection: sortDirectionSchema,
+  })
+  .superRefine((value, context) => {
+    if (value.openedFrom && value.openedTo && value.openedFrom > value.openedTo) {
+      context.addIssue({
+        code: 'custom',
+        path: ['openedFrom'],
+        message: 'openedFrom must be before openedTo',
+      });
+    }
+  });
 
 export const workOrderStatusListSchema = z
   .string()
@@ -51,12 +74,28 @@ export const workOrderStatusListSchema = z
   .transform((value) => value.split(',').map((status) => status.trim()))
   .pipe(z.array(workOrderStatusSchema).min(1));
 
-export const workOrderListQuerySchema = z.strictObject({
-  ...paginationFields,
-  status: workOrderStatusListSchema.optional(),
-  teamId: uuidSchema.optional(),
-  incidentId: uuidSchema.optional(),
-});
+export const workOrderListQuerySchema = z
+  .strictObject({
+    ...paginationFields,
+    status: workOrderStatusListSchema.optional(),
+    teamId: uuidSchema.optional(),
+    incidentId: uuidSchema.optional(),
+    priority: prioritySchema.optional(),
+    q: searchField,
+    createdFrom: dateFilterSchema,
+    createdTo: dateFilterSchema,
+    sortBy: workOrderSortFieldSchema.default('createdAt'),
+    sortDirection: sortDirectionSchema,
+  })
+  .superRefine((value, context) => {
+    if (value.createdFrom && value.createdTo && value.createdFrom > value.createdTo) {
+      context.addIssue({
+        code: 'custom',
+        path: ['createdFrom'],
+        message: 'createdFrom must be before createdTo',
+      });
+    }
+  });
 
 export const idParamsSchema = z.strictObject({ id: uuidSchema });
 

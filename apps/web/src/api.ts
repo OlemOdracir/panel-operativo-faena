@@ -2,8 +2,10 @@ import {
   apiErrorSchema,
   esCL,
   incidentResponseSchema,
+  type IncidentListQuery,
   userResponseSchema,
   workOrderResponseSchema,
+  type WorkOrderListQuery,
 } from '@faena/contracts';
 import { clientEnvironment } from './config/environment';
 import { z } from 'zod';
@@ -64,6 +66,15 @@ const pageSchema = <T extends z.ZodType>(item: T) =>
     }),
   });
 
+function queryString(values: Record<string, string | number | string[] | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    if (value === undefined || value === '') continue;
+    params.set(key, Array.isArray(value) ? value.join(',') : String(value));
+  }
+  return params.toString();
+}
+
 export const api = {
   me: () =>
     request('/auth/me', {}, z.strictObject({ user: userResponseSchema })).then(
@@ -80,9 +91,9 @@ export const api = {
       z.strictObject({ user: userResponseSchema }),
     ).then((value) => value.user),
   logout: () => request('/auth/logout', { method: 'POST' }, z.void()),
-  incidents: (status = '') =>
+  incidents: (query: Partial<IncidentListQuery> | IncidentListQuery['status'] = {}) =>
     request(
-      `/incidents?page=1&pageSize=50${status ? `&status=${encodeURIComponent(status)}` : ''}`,
+      `/incidents?${queryString({ page: 1, pageSize: 20, ...(typeof query === 'string' ? { status: query } : query) })}`,
       {},
       pageSchema(incidentResponseSchema),
     ),
@@ -97,8 +108,12 @@ export const api = {
       },
       incidentResponseSchema,
     ),
-  workOrders: () =>
-    request('/work-orders?page=1&pageSize=50', {}, pageSchema(workOrderResponseSchema)),
+  workOrders: (query: Partial<WorkOrderListQuery> = {}) =>
+    request(
+      `/work-orders?${queryString({ page: 1, pageSize: 20, ...query })}`,
+      {},
+      pageSchema(workOrderResponseSchema),
+    ),
   createWorkOrder: (body: {
     title: string;
     description?: string;
@@ -148,6 +163,12 @@ export const api = {
         }),
       ),
     ),
+  areas: () =>
+    request(
+      '/areas',
+      {},
+      z.array(z.strictObject({ id: z.string().uuid(), code: z.string(), name: z.string() })),
+    ),
   sensors: () =>
     request(
       '/sensors',
@@ -168,3 +189,4 @@ export const api = {
 };
 
 export type Team = Awaited<ReturnType<typeof api.teams>>[number];
+export type Area = Awaited<ReturnType<typeof api.areas>>[number];
