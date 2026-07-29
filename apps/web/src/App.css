@@ -1,5 +1,8 @@
 .app-shell {
+  display: flex;
+  flex-direction: column;
   width: min(1240px, calc(100% - 40px));
+  min-height: 100vh;
   margin: 0 auto;
   padding: 24px 0 72px;
 }
@@ -10,6 +13,8 @@
   display: grid;
   grid-template-columns: 210px minmax(0, 1fr);
   gap: 28px;
+  flex: 1;
+  min-height: 0;
   padding-top: 22px;
 }
 .app-footer {
@@ -27,10 +32,11 @@
   color: #79dfb2;
 }
 .sidebar {
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 420px;
+  min-height: 100%;
   padding: 16px 10px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -289,6 +295,9 @@
 .incident-filters input,
 .incident-filters select {
   width: 100%;
+}
+.incident-results {
+  min-height: 590px;
 }
 .dashboard-primary-grid {
   display: grid;
@@ -642,6 +651,9 @@ button:disabled {
   }
   .incident-filters {
     grid-template-columns: 1fr;
+  }
+  .incident-results {
+    min-height: 0;
   }
   .incident-filter-card .card-heading,
   .dashboard-priorities-card .card-heading {

@@ -427,16 +427,18 @@ function IncidentsPage() {
               />
             </div>
           </section>
-          {filteredIncidents.length === 0 ? (
-            <Empty text={esCL.incidents.noMatching} />
-          ) : (
-            <div className="card">
-              <IncidentList
-                data={filteredIncidents}
-                onStatus={(id, status) => change.mutate({ id, status })}
-              />
-            </div>
-          )}
+          <div className="incident-results">
+            {filteredIncidents.length === 0 ? (
+              <Empty text={esCL.incidents.noMatching} />
+            ) : (
+              <div className="card">
+                <IncidentList
+                  data={filteredIncidents}
+                  onStatus={(id, status) => change.mutate({ id, status })}
+                />
+              </div>
+            )}
+          </div>
         </>
       )}
     </section>

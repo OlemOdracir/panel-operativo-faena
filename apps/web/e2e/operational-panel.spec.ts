@@ -45,6 +45,18 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Filtrar incidentes' })).toBeVisible();
   await expect(page.locator('.list-row').first()).toBeVisible();
+  const sidebar = page.locator('.sidebar');
+  const footer = page.locator('.app-footer');
+  const sidebarBeforeFilter = await sidebar.boundingBox();
+  const footerBeforeFilter = await footer.boundingBox();
+
+  await page.getByLabel('Buscar incidente').fill('sin-coincidencias');
+  await expect(page.getByText('No hay incidentes que coincidan con los filtros.')).toBeVisible();
+
+  const sidebarAfterFilter = await sidebar.boundingBox();
+  const footerAfterFilter = await footer.boundingBox();
+  expect(sidebarAfterFilter?.height).toBe(sidebarBeforeFilter?.height);
+  expect(footerAfterFilter?.y).toBe(footerBeforeFilter?.y);
 
   await page.getByRole('link', { name: 'Órdenes de trabajo' }).click();
   await expect(page.getByRole('heading', { name: 'Órdenes de trabajo' })).toBeVisible();
