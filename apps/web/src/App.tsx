@@ -334,6 +334,7 @@ function Panel({ user }: { user: UserResponse }) {
         </Box>
         <Box
           component="footer"
+          role="contentinfo"
           sx={{
             borderTop: 1,
             borderColor: 'divider',
