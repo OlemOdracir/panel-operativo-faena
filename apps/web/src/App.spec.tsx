@@ -151,4 +151,62 @@ describe('App', () => {
       timeout: 3_000,
     });
   });
+
+  it('renders incident detail with the order form', async () => {
+    const incident = {
+      id: '00000000-0000-4000-8000-000000000002',
+      status: 'OPEN',
+      severity: 'HIGH',
+      sensorId: '00000000-0000-4000-8000-000000000003',
+      sensorCode: 'CHA-TEMP-01',
+      areaName: 'Chancado',
+      value: 90,
+      minValue: 0,
+      maxValue: 80,
+      openedAt: '2026-01-01T00:00:00.000Z',
+      acknowledgedAt: null,
+      resolvedAt: null,
+      acknowledgedBy: null,
+      resolvedBy: null,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents/')) return new Response(JSON.stringify(incident));
+        return new Response(
+          JSON.stringify([
+            {
+              id: '00000000-0000-4000-8000-000000000004',
+              code: 'TEAM-A',
+              name: 'Equipo A',
+              active: true,
+              areaId: '00000000-0000-4000-8000-000000000005',
+            },
+          ]),
+        );
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/incidents/00000000-0000-4000-8000-000000000002']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /CHA-TEMP-01/ })).toBeInTheDocument(),
+    );
+    expect(screen.getByText('Crear orden de trabajo')).toBeInTheDocument();
+  });
 });
+
+const userForTest = {
+  id: '00000000-0000-4000-8000-000000000001',
+  email: 'supervisor@faena.local',
+  name: 'Supervisión',
+};
