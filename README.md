@@ -14,7 +14,7 @@ Sistema full-stack para monitorear sensores mineros, abrir incidentes ante lectu
 - Seed reproducible con lecturas dentro y fuera de rango y órdenes en cada estado del ciclo.
 - Generador opcional Python/pandas para simular lecturas en vivo.
 - Logs JSON con `X-Request-Id`.
-- Interfaz con Tailwind CSS 4, Inter autohospedada, iconos SVG, detalle de incidentes y tablero Kanban.
+- Interfaz MUI 7 con tema Faena, iconos accesibles, detalle de incidentes y grillas operacionales MRT.
 
 ## Requisitos
 
@@ -155,6 +155,12 @@ faena-reading-generator
 
 El generador no contiene reglas de incidentes: solo publica lecturas en la API.
 
+## Frontend MUI y grillas
+
+El frontend usa MUI 7 como sistema visual único, con un tema Faena en `apps/web/src/app/theme.ts`. La navegación usa un `Drawer` persistente y colapsable en escritorio y temporal en móvil.
+
+Las páginas de incidentes y órdenes usan Material React Table con paginación, ordenamiento y filtros remotos conectados a TanStack Query. Los rangos de fecha usan MUI X Date Pickers con Day.js y se envían como ISO 8601 UTC. Tailwind ya no forma parte del pipeline del frontend.
+
 ## Estructura
 
 ```text
@@ -164,8 +170,6 @@ packages/contracts       esquemas Zod, tipos y catálogo i18n `esCL` compartidos
 tools/reading-generator  simulador Python/pandas
 docs                     arquitectura, seguridad y API
 ```
-
-La interfaz usa Tailwind CSS 4 mediante `@tailwindcss/vite`, con tokens visuales definidos en `apps/web/src/index.css`. Los estilos específicos del dominio permanecen en `App.css` mientras la migración se completa por componentes.
 
 Los textos de interfaz, etiquetas de roles/estados/severidades y mensajes API se centralizan en `packages/contracts/src/i18n.ts`. Los enums de la base y de la API se mantienen en inglés como contratos estables, y se traducen a español de Chile solo al presentarlos. `.editorconfig` declara UTF-8 y `corepack pnpm encoding:check` evita que se versionen caracteres de reemplazo o texto mal decodificado.
 

@@ -54,7 +54,7 @@ Supervisor gestiona incidentes y órdenes. Admin tiene además permiso para inge
 
 ## Frontend
 
-React Router organiza resumen, lista y detalle de incidentes, y tablero de órdenes. TanStack Query mantiene consultas y refetch moderado; las mutaciones invalidan las claves relacionadas. Tailwind CSS 4 define tokens visuales y layout responsive; todas las consultas distinguen carga, error, vacío y contenido.
+React Router organiza resumen, lista y detalle de incidentes, y tablero de órdenes. TanStack Query mantiene consultas y refetch moderado; las mutaciones invalidan las claves relacionadas. MUI 7 define el tema, tokens, layout responsive y componentes accesibles; Material React Table resuelve las grillas con paginación remota. Todas las consultas distinguen carga, error, vacío y contenido.
 
 ## Operación
 

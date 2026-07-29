@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
 
 const textExtensions = new Set([
@@ -29,6 +29,7 @@ const files = execFileSync(
   .toString('utf8')
   .split('\0')
   .filter(Boolean)
+  .filter((file) => existsSync(file))
   .filter((file) => textExtensions.has(extname(file)) || explicitTextFiles.has(file));
 const failures = [];
 
