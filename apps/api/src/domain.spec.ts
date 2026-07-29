@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   canTransitionIncident,
   canTransitionWorkOrder,
+  calculateIncidentSeverity,
   incidentStatusUpdateSchema,
   isOutOfRange,
   workOrderCreateSchema,
@@ -14,6 +15,13 @@ void describe('operational domain rules', () => {
     assert.equal(isOutOfRange(80, 10, 80), false);
     assert.equal(isOutOfRange(9.99, 10, 80), true);
     assert.equal(isOutOfRange(80.01, 10, 80), true);
+  });
+
+  void it('classifies incident severity from range deviation', () => {
+    assert.equal(calculateIncidentSeverity(50, 10, 90), 'LOW');
+    assert.equal(calculateIncidentSeverity(95, 10, 90), 'MEDIUM');
+    assert.equal(calculateIncidentSeverity(110, 10, 90), 'HIGH');
+    assert.equal(calculateIncidentSeverity(140, 10, 90), 'CRITICAL');
   });
 
   void it('only allows sequential incident transitions', () => {
