@@ -73,6 +73,61 @@ void describe('application services', () => {
     assert.equal(result.incidentCreated, true);
   });
 
+  void it('keeps concurrent out-of-range ingestions idempotent', async () => {
+    let insertAttempts = 0;
+    const tx = {
+      sensor: { findUnique: async () => sensor },
+      reading: {
+        create: async () => ({
+          id: `reading-${insertAttempts + 1}`,
+          sensorId: sensor.id,
+          value: 99,
+          measuredAt: new Date('2026-01-01T00:00:00Z'),
+        }),
+      },
+      incident: { findFirst: async () => ({ id: 'incident-1' }) },
+      $executeRaw: async () => {
+        insertAttempts += 1;
+        return insertAttempts === 1 ? 1 : 0;
+      },
+    };
+    const service = new ReadingsService({
+      $transaction: async (callback: (value: typeof tx) => unknown) => callback(tx),
+    } as unknown as PrismaService);
+
+    const results = await Promise.all([
+      service.create({ sensorId: sensor.id, value: 99, measuredAt: '2026-01-01T00:00:00Z' }),
+      service.create({ sensorId: sensor.id, value: 99, measuredAt: '2026-01-01T00:00:01Z' }),
+    ]);
+
+    assert.equal(insertAttempts, 2);
+    assert.equal(results.filter((result) => result.incidentCreated).length, 1);
+  });
+
+  void it('propagates transaction failures so the reading is rolled back', async () => {
+    let readingCreated = false;
+    const tx = {
+      sensor: { findUnique: async () => sensor },
+      reading: {
+        create: async () => {
+          readingCreated = true;
+          throw new Error('database connection lost');
+        },
+      },
+      incident: { findFirst: async () => null },
+      $executeRaw: async () => 0,
+    };
+    const service = new ReadingsService({
+      $transaction: async (callback: (value: typeof tx) => unknown) => callback(tx),
+    } as unknown as PrismaService);
+
+    await assert.rejects(
+      service.create({ sensorId: sensor.id, value: 40, measuredAt: '2026-01-01T00:00:00Z' }),
+      /database connection lost/,
+    );
+    assert.equal(readingCreated, true);
+  });
+
   void it('changes an incident status using the authenticated actor', async () => {
     const incident = { id: 'incident-1', status: 'OPEN' as const };
     const full = {
