@@ -5,6 +5,7 @@ import argon2 from 'argon2';
 import { PrismaService } from '../../database/prisma.service';
 import type { Environment } from '../../config/environment';
 import type { AuthenticatedUser } from './auth.types';
+import { esCL } from '@faena/contracts';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
     if (!valid || !user)
       throw new UnauthorizedException({
         code: 'INVALID_CREDENTIALS',
-        message: 'Invalid credentials',
+        message: esCL.api.invalidCredentials,
       });
     const sessionUser: AuthenticatedUser = {
       id: user.id,

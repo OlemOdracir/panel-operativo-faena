@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { calculateIncidentSeverity, isOutOfRange, type ReadingInput } from '@faena/contracts';
+import { calculateIncidentSeverity, esCL, isOutOfRange, type ReadingInput } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -18,7 +18,10 @@ export class ReadingsService {
       .$transaction(async (tx) => {
         const sensor = await tx.sensor.findUnique({ where: { id: input.sensorId } });
         if (!sensor)
-          throw new NotFoundException({ code: 'SENSOR_NOT_FOUND', message: 'Sensor not found' });
+          throw new NotFoundException({
+            code: 'SENSOR_NOT_FOUND',
+            message: esCL.api.sensorNotFound,
+          });
         const outOfRange = isOutOfRange(
           input.value,
           Number(sensor.minValue),
@@ -53,7 +56,7 @@ export class ReadingsService {
         if (error instanceof Error && error.message.includes('readings'))
           throw new ConflictException({
             code: 'READING_CONFLICT',
-            message: 'Reading could not be stored',
+            message: esCL.api.readingCouldNotBeStored,
           });
         throw error;
       });

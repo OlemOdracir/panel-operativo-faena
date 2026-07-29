@@ -10,7 +10,16 @@ import {
 } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import type { IncidentResponse, UserResponse, WorkOrderResponse } from '@faena/contracts';
+import {
+  esCL,
+  formatDateTime,
+  labelRole,
+  labelSeverity,
+  labelStatus,
+  type IncidentResponse,
+  type UserResponse,
+  type WorkOrderResponse,
+} from '@faena/contracts';
 import { ApiError, api, type Team } from './api';
 import { authQueryKeys } from './features/auth/query-keys';
 import { catalogQueryKeys } from './features/catalog/query-keys';
@@ -20,7 +29,7 @@ import { workOrderQueryKeys } from './features/work-orders/query-keys';
 function App() {
   const me = useQuery({ queryKey: authQueryKeys.me, queryFn: api.me, retry: false });
   if (me.isPending)
-    return <PageMessage title="Cargando sesión" text="Verificando tu acceso al panel." />;
+    return <PageMessage title={esCL.auth.loadingTitle} text={esCL.auth.loadingText} />;
   if (me.isError) return <LoginPage />;
   return <Panel user={me.data} />;
 }
@@ -46,11 +55,11 @@ function LoginPage() {
           login.mutate();
         }}
       >
-        <span className="eyebrow">Panel operativo</span>
-        <h1>Ingresa a la faena</h1>
-        <p>Monitoreo de sensores y gestión del trabajo en terreno.</p>
+        <span className="eyebrow">{esCL.app.operationalPanel}</span>
+        <h1>{esCL.auth.loginTitle}</h1>
+        <p>{esCL.auth.loginDescription}</p>
         <label>
-          Correo
+          {esCL.auth.email}
           <input
             type="email"
             value={email}
@@ -60,7 +69,7 @@ function LoginPage() {
           />
         </label>
         <label>
-          Contraseña
+          {esCL.auth.password}
           <input
             type="password"
             value={password}
@@ -71,13 +80,11 @@ function LoginPage() {
         </label>
         {login.isError && (
           <p className="error" role="alert">
-            {login.error instanceof ApiError
-              ? login.error.message
-              : 'No fue posible iniciar sesión.'}
+            {login.error instanceof ApiError ? login.error.message : esCL.auth.loginFailed}
           </p>
         )}
         <button className="primary" disabled={login.isPending}>
-          {login.isPending ? 'Ingresando…' : 'Ingresar'}
+          {login.isPending ? esCL.auth.loggingIn : esCL.auth.login}
         </button>
       </form>
     </main>
@@ -101,36 +108,36 @@ function Panel({ user }: { user: UserResponse }) {
         <Link to="/" className="brand">
           <span className="brand-mark">PF</span>
           <span>
-            <strong>Panel Operativo de Faena</strong>
-            <small>Monitoreo y gestión en terreno</small>
+            <strong>{esCL.app.name}</strong>
+            <small>{esCL.app.subtitle}</small>
           </span>
         </Link>
         <div className="user-menu">
           <span>
-            {user.name} · {user.role}
+            {user.name} · {labelRole(user.role)}
           </span>
           <button onClick={() => logout.mutate()} disabled={logout.isPending}>
-            Salir
+            {esCL.auth.logout}
           </button>
         </div>
       </header>
       <div className="app-body">
-        <aside className="sidebar" aria-label="Navegación principal">
-          <span className="sidebar-label">Operación</span>
+        <aside className="sidebar" aria-label={esCL.navigation.label}>
+          <span className="sidebar-label">{esCL.navigation.operation}</span>
           <Link className={location.pathname === '/' ? 'active' : ''} to="/">
-            <span aria-hidden="true">⌂</span> Resumen
+            <span aria-hidden="true">⌂</span> {esCL.navigation.dashboard}
           </Link>
           <Link
             className={location.pathname.startsWith('/incidents') ? 'active' : ''}
             to="/incidents"
           >
-            <span aria-hidden="true">◈</span> Incidentes
+            <span aria-hidden="true">◈</span> {esCL.navigation.incidents}
           </Link>
           <Link
             className={location.pathname.startsWith('/work-orders') ? 'active' : ''}
             to="/work-orders"
           >
-            <span aria-hidden="true">▦</span> Órdenes de trabajo
+            <span aria-hidden="true">▦</span> {esCL.navigation.workOrders}
           </Link>
         </aside>
         <div className="main-content">
@@ -164,38 +171,32 @@ function Dashboard() {
     refetchInterval: 15_000,
   });
   if (incidents.isPending || orders.isPending || sensors.isPending)
-    return <PageMessage title="Cargando resumen" text="Consultando el estado operacional." />;
+    return <PageMessage title={esCL.dashboard.loadingTitle} text={esCL.dashboard.loadingText} />;
   if (incidents.isError || orders.isError || sensors.isError)
-    return (
-      <PageMessage
-        title="No se pudo cargar el resumen"
-        text="Revisa la conexión y vuelve a intentar."
-        error
-      />
-    );
+    return <PageMessage title={esCL.dashboard.errorTitle} text={esCL.dashboard.errorText} error />;
   return (
     <section className="content">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">Vista operacional</span>
-          <h1>Estado de la faena</h1>
+          <span className="eyebrow">{esCL.dashboard.eyebrow}</span>
+          <h1>{esCL.dashboard.title}</h1>
         </div>
-        <span className="live-dot">● Datos actualizados automáticamente</span>
+        <span className="live-dot">● {esCL.dashboard.live}</span>
       </div>
       <div className="metrics">
         <Metric
-          label="Incidentes abiertos"
+          label={esCL.dashboard.openIncidents}
           value={incidents.data.data.filter((item) => item.status !== 'RESOLVED').length}
           tone="danger"
         />
         <Metric
-          label="Órdenes activas"
+          label={esCL.dashboard.activeWorkOrders}
           value={orders.data.data.filter((item) => item.status !== 'CLOSED').length}
           tone="accent"
         />
-        <Metric label="Sensores activos" value={sensors.data.length} tone="quiet" />
+        <Metric label={esCL.dashboard.activeSensors} value={sensors.data.length} tone="quiet" />
         <Metric
-          label="Tiempo medio de cierre"
+          label={esCL.dashboard.averageClosureTime}
           value={averageClosureHours(orders.data.data)}
           tone="quiet"
           suffix=" h"
@@ -204,15 +205,15 @@ function Dashboard() {
       <div className="two-columns">
         <section className="card">
           <div className="card-heading">
-            <h2>Últimos incidentes</h2>
-            <Link to="/incidents">Ver todos</Link>
+            <h2>{esCL.dashboard.latestIncidents}</h2>
+            <Link to="/incidents">{esCL.dashboard.seeAll}</Link>
           </div>
           <IncidentList data={incidents.data.data.slice(0, 5)} />
         </section>
         <section className="card">
           <div className="card-heading">
-            <h2>Órdenes recientes</h2>
-            <Link to="/work-orders">Ver todas</Link>
+            <h2>{esCL.dashboard.recentWorkOrders}</h2>
+            <Link to="/work-orders">{esCL.dashboard.seeAllFeminine}</Link>
           </div>
           <OrderList data={orders.data.data.slice(0, 5)} />
         </section>
@@ -248,16 +249,16 @@ function IncidentsPage() {
   return (
     <section className="content">
       <PageHeading
-        eyebrow="Monitoreo"
-        title="Incidentes"
-        text="Lecturas fuera de rango que requieren seguimiento operativo."
+        eyebrow={esCL.incidents.eyebrow}
+        title={esCL.incidents.title}
+        text={esCL.incidents.description}
       />
       {incidents.isPending ? (
         <Loading />
       ) : incidents.isError ? (
         <ErrorState error={incidents.error} />
       ) : incidents.data.data.length === 0 ? (
-        <Empty text="No hay incidentes para mostrar." />
+        <Empty text={esCL.incidents.empty} />
       ) : (
         <div className="card">
           <IncidentList
@@ -291,49 +292,47 @@ function IncidentDetailPage() {
   });
 
   if (incident.isPending)
-    return <PageMessage title="Cargando incidente" text="Consultando el detalle operacional." />;
+    return <PageMessage title={esCL.incidents.loadingTitle} text={esCL.incidents.loadingText} />;
   if (incident.isError)
-    return (
-      <PageMessage title="No se pudo cargar el incidente" text={incident.error.message} error />
-    );
+    return <PageMessage title={esCL.incidents.errorTitle} text={incident.error.message} error />;
 
   const item = incident.data;
   return (
     <section className="content">
       <Link className="back-link" to="/incidents">
-        ← Volver a incidentes
+        {esCL.incidents.back}
       </Link>
       <div className="page-heading">
         <PageHeading
-          eyebrow="Detalle operacional"
+          eyebrow={esCL.incidents.detailEyebrow}
           title={`${item.sensorCode} · ${item.areaName}`}
-          text="Incidente generado por una lectura fuera de rango."
+          text={esCL.incidents.detailDescription}
         />
         <StatusBadge status={item.status} />
       </div>
       <div className="two-columns detail-grid md:grid-cols-2 md:items-start">
         <section className="card detail-card bg-faena-surface">
           <div className="card-heading">
-            <h2>Datos del incidente</h2>
+            <h2>{esCL.incidents.detailTitle}</h2>
             <SeverityBadge severity={item.severity} />
           </div>
           <dl className="detail-list">
             <div>
-              <dt>Área</dt>
+              <dt>{esCL.incidents.area}</dt>
               <dd>{item.areaName}</dd>
             </div>
             <div>
-              <dt>Sensor</dt>
+              <dt>{esCL.incidents.sensor}</dt>
               <dd>{item.sensorCode}</dd>
             </div>
             <div>
-              <dt>Detectado</dt>
-              <dd>{new Date(item.openedAt).toLocaleString('es-CL')}</dd>
+              <dt>{esCL.incidents.detected}</dt>
+              <dd>{formatDateTime(item.openedAt)}</dd>
             </div>
             <div>
-              <dt>Lectura</dt>
+              <dt>{esCL.incidents.reading}</dt>
               <dd className="reading-alert">
-                {item.value} · rango {item.minValue}–{item.maxValue}
+                {item.value} · {esCL.incidents.range} {item.minValue}–{item.maxValue}
               </dd>
             </div>
           </dl>
@@ -343,7 +342,7 @@ function IncidentDetailPage() {
                 onClick={() => change.mutate({ status: 'ACKNOWLEDGED' })}
                 disabled={change.isPending}
               >
-                Tomar incidente
+                {esCL.incidents.takeIncident}
               </button>
             )}
             {item.status === 'ACKNOWLEDGED' && (
@@ -351,15 +350,15 @@ function IncidentDetailPage() {
                 onClick={() => change.mutate({ status: 'RESOLVED' })}
                 disabled={change.isPending}
               >
-                Resolver incidente
+                {esCL.incidents.resolveIncident}
               </button>
             )}
           </div>
         </section>
         <section className="card detail-card bg-faena-surface">
           <div className="card-heading">
-            <h2>Crear orden de trabajo</h2>
-            <span className="eyebrow">Gestión</span>
+            <h2>{esCL.workOrders.createTitle}</h2>
+            <span className="eyebrow">{esCL.workOrders.management}</span>
           </div>
           <WorkOrderForm
             incidentId={item.id}
@@ -368,12 +367,12 @@ function IncidentDetailPage() {
           />
           {create.isSuccess && (
             <p className="success" role="status">
-              Orden creada correctamente.
+              {esCL.workOrders.created}
             </p>
           )}
           {teams.isError && (
             <p className="error" role="alert">
-              No se pudieron cargar los equipos.
+              {esCL.workOrders.teamsLoadFailed}
             </p>
           )}
         </section>
@@ -410,12 +409,12 @@ function WorkOrdersPage() {
     <section className="content">
       <div className="page-heading">
         <PageHeading
-          eyebrow="Gestión operacional"
-          title="Órdenes de trabajo"
-          text="Coordina el trabajo de los equipos en terreno."
+          eyebrow={esCL.workOrders.eyebrow}
+          title={esCL.workOrders.title}
+          text={esCL.workOrders.description}
         />
         <button className="primary" onClick={() => setShowForm((value) => !value)}>
-          {showForm ? 'Cancelar' : 'Nueva orden'}
+          {showForm ? esCL.workOrders.cancel : esCL.workOrders.new}
         </button>
       </div>
       {showForm && (
@@ -426,7 +425,7 @@ function WorkOrdersPage() {
       ) : orders.isError ? (
         <ErrorState error={orders.error} />
       ) : orders.data.data.length === 0 ? (
-        <Empty text="Todavía no hay órdenes de trabajo." />
+        <Empty text={esCL.workOrders.empty} />
       ) : (
         <OrderBoard
           data={orders.data.data}
@@ -465,7 +464,7 @@ function WorkOrderForm({
       }}
     >
       <label>
-        Título
+        {esCL.workOrders.titleLabel}
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -475,16 +474,16 @@ function WorkOrderForm({
         />
       </label>
       <label>
-        Prioridad
+        {esCL.workOrders.priority}
         <select value={priority} onChange={(event) => setPriority(event.target.value)}>
-          <option>LOW</option>
-          <option>MEDIUM</option>
-          <option>HIGH</option>
-          <option>CRITICAL</option>
+          <option value="LOW">{labelSeverity('LOW')}</option>
+          <option value="MEDIUM">{labelSeverity('MEDIUM')}</option>
+          <option value="HIGH">{labelSeverity('HIGH')}</option>
+          <option value="CRITICAL">{labelSeverity('CRITICAL')}</option>
         </select>
       </label>
       <label className="full">
-        Descripción
+        {esCL.workOrders.descriptionLabel}
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -493,7 +492,7 @@ function WorkOrderForm({
         />
       </label>
       <button className="primary" disabled={pending}>
-        {pending ? 'Creando…' : 'Crear orden'}
+        {pending ? esCL.workOrders.creating : esCL.workOrders.create}
       </button>
     </form>
   );
@@ -511,10 +510,10 @@ function OrderBoard({
   onAdvance: (id: string, status: string) => void;
 }) {
   const columns = [
-    ['OPEN', 'Abiertas'],
-    ['ASSIGNED', 'Asignadas'],
-    ['IN_PROGRESS', 'En progreso'],
-    ['CLOSED', 'Cerradas'],
+    ['OPEN', esCL.workOrderColumn.OPEN],
+    ['ASSIGNED', esCL.workOrderColumn.ASSIGNED],
+    ['IN_PROGRESS', esCL.workOrderColumn.IN_PROGRESS],
+    ['CLOSED', esCL.workOrderColumn.CLOSED],
   ] as const;
   return (
     <div className="kanban-grid grid grid-cols-1 gap-4 xl:grid-cols-4">
@@ -552,17 +551,22 @@ function IncidentList({
           <div>
             <strong>{item.sensorCode}</strong>
             <span>
-              {item.areaName} · {item.value} · rango {item.minValue}–{item.maxValue}
+              {item.areaName} · {item.value} · {esCL.incidents.range} {item.minValue}–
+              {item.maxValue}
             </span>
           </div>
           <div className="row-actions">
             <SeverityBadge severity={item.severity} />
             <StatusBadge status={item.status} />
             {onStatus && item.status === 'OPEN' && (
-              <button onClick={() => onStatus(item.id, 'ACKNOWLEDGED')}>Tomar</button>
+              <button onClick={() => onStatus(item.id, 'ACKNOWLEDGED')}>
+                {esCL.incidents.take}
+              </button>
             )}
             {onStatus && item.status === 'ACKNOWLEDGED' && (
-              <button onClick={() => onStatus(item.id, 'RESOLVED')}>Resolver</button>
+              <button onClick={() => onStatus(item.id, 'RESOLVED')}>
+                {esCL.incidents.resolve}
+              </button>
             )}
           </div>
         </article>
@@ -588,22 +592,22 @@ function OrderList({
           <div>
             <strong>{item.title}</strong>
             <span>
-              {item.priority} · {item.teamName ?? 'Sin equipo'} ·{' '}
-              {new Date(item.createdAt).toLocaleString('es-CL')}
+              {labelSeverity(item.priority)} · {item.teamName ?? esCL.workOrders.noTeam} ·{' '}
+              {formatDateTime(item.createdAt)}
             </span>
           </div>
           <div className="row-actions">
             <StatusBadge status={item.status} />
             {item.status === 'OPEN' && teams && onAssign && (
               <select
-                aria-label={`Asignar ${item.title}`}
+                aria-label={esCL.workOrders.assignAria(item.title)}
                 defaultValue=""
                 onChange={(event) => {
                   if (event.target.value) onAssign(item.id, event.target.value);
                 }}
               >
                 <option value="" disabled>
-                  Asignar
+                  {esCL.workOrders.assign}
                 </option>
                 {teams.map((team) => (
                   <option key={team.id} value={team.id}>
@@ -613,10 +617,12 @@ function OrderList({
               </select>
             )}
             {item.status === 'ASSIGNED' && onAdvance && (
-              <button onClick={() => onAdvance(item.id, 'IN_PROGRESS')}>Iniciar</button>
+              <button onClick={() => onAdvance(item.id, 'IN_PROGRESS')}>
+                {esCL.workOrders.start}
+              </button>
             )}
             {item.status === 'IN_PROGRESS' && onAdvance && (
-              <button onClick={() => onAdvance(item.id, 'CLOSED')}>Cerrar</button>
+              <button onClick={() => onAdvance(item.id, 'CLOSED')}>{esCL.workOrders.close}</button>
             )}
           </div>
         </article>
@@ -625,12 +631,12 @@ function OrderList({
   );
 }
 function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`status status-${status.toLowerCase()}`}>{status.replace('_', ' ')}</span>
-  );
+  return <span className={`status status-${status.toLowerCase()}`}>{labelStatus(status)}</span>;
 }
 function SeverityBadge({ severity }: { severity: string }) {
-  return <span className={`severity severity-${severity.toLowerCase()}`}>{severity}</span>;
+  return (
+    <span className={`severity severity-${severity.toLowerCase()}`}>{labelSeverity(severity)}</span>
+  );
 }
 function Metric({
   label,
@@ -684,14 +690,14 @@ function Loading() {
   return (
     <div className="card state">
       <span className="spinner" />
-      Cargando datos…
+      {esCL.state.loading}
     </div>
   );
 }
 function Empty({ text }: { text: string }) {
   return (
     <div className="card state">
-      <strong>Sin resultados</strong>
+      <strong>{esCL.state.noResults}</strong>
       <span>{text}</span>
     </div>
   );
@@ -699,7 +705,7 @@ function Empty({ text }: { text: string }) {
 function ErrorState({ error }: { error: Error }) {
   return (
     <div className="card state error-card">
-      <strong>No se pudieron cargar los datos</strong>
+      <strong>{esCL.state.dataLoadFailed}</strong>
       <span>
         {error instanceof ApiError && error.requestId
           ? `${error.message} (${error.requestId})`

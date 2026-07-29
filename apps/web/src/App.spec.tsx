@@ -45,7 +45,7 @@ describe('App', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
     );
-    expect(screen.getByText('Supervisión · SUPERVISOR')).toBeInTheDocument();
+    expect(screen.getByText('Supervisión · Supervisor')).toBeInTheDocument();
   });
 
   it('provides the query client to the component tree', () => {

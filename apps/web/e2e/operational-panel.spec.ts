@@ -1,12 +1,14 @@
 import { expect, request, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
-const environment = Object.fromEntries(
-  readFileSync('.env', 'utf8')
-    .split(/\r?\n/)
-    .filter((line) => line.includes('='))
-    .map((line) => line.split('=', 2)),
-);
+const environment = existsSync('.env')
+  ? Object.fromEntries(
+      readFileSync('.env', 'utf8')
+        .split(/\r?\n/)
+        .filter((line) => line.includes('='))
+        .map((line) => line.split('=', 2)),
+    )
+  : {};
 
 const supervisorPassword =
   process.env.E2E_SUPERVISOR_PASSWORD ?? environment.SEED_SUPERVISOR_PASSWORD;
@@ -54,7 +56,7 @@ test('administrator session retains the admin role', async ({ page }) => {
   await page.getByRole('button', { name: 'Ingresar' }).click();
 
   await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
-  await expect(page.getByText(/ADMIN/)).toBeVisible();
+  await expect(page.getByText(/Administrador/)).toBeVisible();
 });
 
 test('API rejects operational data without a session', async () => {

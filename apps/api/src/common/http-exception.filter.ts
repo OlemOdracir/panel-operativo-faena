@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { esCL } from '@faena/contracts';
 import type { RequestWithId } from './request-id.middleware';
 
 @Catch()
@@ -20,7 +21,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const body =
       typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>) : {};
     const code = typeof body.code === 'string' ? body.code : this.codeForStatus(status);
-    const message = typeof body.message === 'string' ? body.message : 'Unexpected server error';
+    const message =
+      typeof body.message === 'string' ? body.message : esCL.api.unexpectedServerError;
     const details = body.details;
     response.status(status).json({
       code,

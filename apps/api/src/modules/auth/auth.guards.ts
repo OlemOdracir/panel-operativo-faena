@@ -13,7 +13,7 @@ import type { Environment } from '../../config/environment';
 import type { AuthenticatedUser } from './auth.types';
 import { IS_PUBLIC_KEY } from './auth.decorators';
 import { ROLES_KEY } from './roles.decorator';
-import type { Role } from '@faena/contracts';
+import { esCL, type Role } from '@faena/contracts';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 
 type RequestWithUser = Request & { user?: AuthenticatedUser };
@@ -37,7 +37,10 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const token = request.cookies?.faena_session as string | undefined;
     if (!token)
-      throw new UnauthorizedException({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: esCL.api.authenticationRequired,
+      });
     try {
       const payload = await this.jwt.verifyAsync<{
         sub: string;
@@ -53,7 +56,10 @@ export class JwtAuthGuard implements CanActivate {
       };
       return true;
     } catch {
-      throw new UnauthorizedException({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+      throw new UnauthorizedException({
+        code: 'UNAUTHORIZED',
+        message: esCL.api.authenticationRequired,
+      });
     }
   }
 }
@@ -70,7 +76,10 @@ export class RolesGuard implements CanActivate {
     if (!roles?.length) return true;
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     if (!request.user || !roles.includes(request.user.role))
-      throw new ForbiddenException({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: esCL.api.insufficientPermissions,
+      });
     return true;
   }
 }
@@ -92,7 +101,7 @@ export class CsrfGuard implements CanActivate {
     if (origin && !allowedOrigins.includes(origin))
       throw new ForbiddenException({
         code: 'CSRF_ORIGIN_REJECTED',
-        message: 'Request origin is not allowed',
+        message: esCL.api.originNotAllowed,
       });
     if (
       !cookie ||
@@ -100,7 +109,7 @@ export class CsrfGuard implements CanActivate {
       cookie.length !== header.length ||
       !timingSafeEqual(Buffer.from(cookie), Buffer.from(header))
     ) {
-      throw new ForbiddenException({ code: 'CSRF_INVALID', message: 'Invalid CSRF token' });
+      throw new ForbiddenException({ code: 'CSRF_INVALID', message: esCL.api.invalidCsrfToken });
     }
     return true;
   }

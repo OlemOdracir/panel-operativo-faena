@@ -4,6 +4,7 @@ import {
   type ArgumentMetadata,
   type PipeTransform,
 } from '@nestjs/common';
+import { esCL } from '@faena/contracts';
 import type { ZodType } from 'zod';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class ZodValidationPipe implements PipeTransform<unknown> {
     if (!result.success) {
       throw new BadRequestException({
         code: 'VALIDATION_ERROR',
-        message: `Invalid ${metadata.type}`,
+        message: esCL.api.invalidInput,
         details: result.error.issues.map((issue) => ({ path: issue.path, message: issue.message })),
       });
     }

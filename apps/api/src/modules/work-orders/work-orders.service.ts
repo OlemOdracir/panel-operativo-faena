@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { type Priority, type WorkOrderStatus } from '@faena/contracts';
+import { esCL, type Priority, type WorkOrderStatus } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -56,7 +56,7 @@ export class WorkOrdersService {
     if (!order)
       throw new NotFoundException({
         code: 'WORK_ORDER_NOT_FOUND',
-        message: 'Work order not found',
+        message: esCL.api.workOrderNotFound,
       });
     return this.toResponse(order);
   }
@@ -69,7 +69,10 @@ export class WorkOrdersService {
       input.incidentId &&
       !(await this.prisma.incident.findUnique({ where: { id: input.incidentId } }))
     )
-      throw new NotFoundException({ code: 'INCIDENT_NOT_FOUND', message: 'Incident not found' });
+      throw new NotFoundException({
+        code: 'INCIDENT_NOT_FOUND',
+        message: esCL.api.incidentNotFound,
+      });
     const order = await this.prisma.workOrder.create({
       data: {
         title: input.title,
@@ -91,14 +94,14 @@ export class WorkOrdersService {
     if (!order)
       throw new NotFoundException({
         code: 'WORK_ORDER_NOT_FOUND',
-        message: 'Work order not found',
+        message: esCL.api.workOrderNotFound,
       });
     if (!team || !team.active)
-      throw new NotFoundException({ code: 'TEAM_NOT_FOUND', message: 'Team not found' });
+      throw new NotFoundException({ code: 'TEAM_NOT_FOUND', message: esCL.api.teamNotFound });
     if (!canAssignWorkOrder(order.status))
       throw new ConflictException({
         code: 'INVALID_WORK_ORDER_TRANSITION',
-        message: 'Only open orders can be assigned',
+        message: esCL.api.onlyOpenOrdersCanBeAssigned,
       });
     await this.prisma.workOrder.update({
       where: { id },
@@ -112,12 +115,12 @@ export class WorkOrdersService {
     if (!order)
       throw new NotFoundException({
         code: 'WORK_ORDER_NOT_FOUND',
-        message: 'Work order not found',
+        message: esCL.api.workOrderNotFound,
       });
     if (!canAdvanceWorkOrder(order.status, status))
       throw new ConflictException({
         code: 'INVALID_WORK_ORDER_TRANSITION',
-        message: `Cannot move order from ${order.status} to ${status}`,
+        message: esCL.api.workOrderTransition(order.status, status),
       });
     const now = new Date();
     const data =

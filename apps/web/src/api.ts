@@ -1,5 +1,6 @@
 import {
   apiErrorSchema,
+  esCL,
   incidentResponseSchema,
   userResponseSchema,
   workOrderResponseSchema,
@@ -44,7 +45,7 @@ async function request<T>(path: string, init: RequestInit, schema: z.ZodType<T>)
     const parsed = apiErrorSchema.safeParse(raw);
     throw new ApiError(
       response.status,
-      parsed.success ? parsed.data.message : 'Request failed',
+      parsed.success ? parsed.data.message : esCL.api.requestFailed,
       parsed.success ? parsed.data.requestId : (response.headers.get('X-Request-Id') ?? undefined),
     );
   }

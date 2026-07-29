@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { incidentStatusSchema, type IncidentStatus } from '@faena/contracts';
+import { esCL, incidentStatusSchema, type IncidentStatus } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -59,18 +59,24 @@ export class IncidentsService {
       include: this.include(),
     });
     if (!incident)
-      throw new NotFoundException({ code: 'INCIDENT_NOT_FOUND', message: 'Incident not found' });
+      throw new NotFoundException({
+        code: 'INCIDENT_NOT_FOUND',
+        message: esCL.api.incidentNotFound,
+      });
     return this.toResponse(incident);
   }
 
   async changeStatus(id: string, status: IncidentStatus, user: AuthenticatedUser) {
     const current = await this.prisma.incident.findUnique({ where: { id } });
     if (!current)
-      throw new NotFoundException({ code: 'INCIDENT_NOT_FOUND', message: 'Incident not found' });
+      throw new NotFoundException({
+        code: 'INCIDENT_NOT_FOUND',
+        message: esCL.api.incidentNotFound,
+      });
     if (!canAdvanceIncident(current.status, status)) {
       throw new ConflictException({
         code: 'INVALID_INCIDENT_TRANSITION',
-        message: `Cannot move incident from ${current.status} to ${status}`,
+        message: esCL.api.incidentTransition(current.status, status),
       });
     }
     const now = new Date();

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export { esCL, formatDateTime, labelRole, labelSeverity, labelStatus } from './i18n.js';
+
 export const roleSchema = z.enum(['SUPERVISOR', 'ADMIN']);
 export const incidentStatusSchema = z.enum(['OPEN', 'ACKNOWLEDGED', 'RESOLVED']);
 export const incidentSeveritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
