@@ -17,6 +17,12 @@ enum IncidentStatus {
   ACKNOWLEDGED
   RESOLVED
 }
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
 enum WorkOrderStatus {
   OPEN
   ASSIGNED
@@ -37,6 +43,7 @@ model Area {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   sensors Sensor[]
+  teams Team[]
   @@map("areas")
 }
 
@@ -74,6 +81,7 @@ model Incident {
   sensorId String @map("sensor_id") @db.Uuid
   triggerReadingId String @unique @map("trigger_reading_id") @db.Uuid
   status IncidentStatus @default(OPEN)
+  severity IncidentSeverity @default(MEDIUM)
   openedAt DateTime @default(now()) @map("opened_at") @db.Timestamptz(6)
   acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz(6)
   resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
@@ -95,9 +103,12 @@ model Team {
   code String @unique @db.VarChar(32)
   name String @db.VarChar(120)
   active Boolean @default(true)
+  areaId String @map("area_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   workOrders WorkOrder[]
+  area Area @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  @@index([areaId])
   @@map("teams")
 }
 

@@ -118,6 +118,7 @@ export const IncidentScalarFieldEnum = {
   sensorId: 'sensorId',
   triggerReadingId: 'triggerReadingId',
   status: 'status',
+  severity: 'severity',
   openedAt: 'openedAt',
   acknowledgedAt: 'acknowledgedAt',
   resolvedAt: 'resolvedAt',
@@ -133,6 +134,7 @@ export const TeamScalarFieldEnum = {
   code: 'code',
   name: 'name',
   active: 'active',
+  areaId: 'areaId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

@@ -183,6 +183,7 @@ export type AreaWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Area"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Area"> | Date | string
   sensors?: Prisma.SensorListRelationFilter
+  teams?: Prisma.TeamListRelationFilter
 }
 
 export type AreaOrderByWithRelationInput = {
@@ -192,6 +193,7 @@ export type AreaOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   sensors?: Prisma.SensorOrderByRelationAggregateInput
+  teams?: Prisma.TeamOrderByRelationAggregateInput
 }
 
 export type AreaWhereUniqueInput = Prisma.AtLeast<{
@@ -204,6 +206,7 @@ export type AreaWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Area"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Area"> | Date | string
   sensors?: Prisma.SensorListRelationFilter
+  teams?: Prisma.TeamListRelationFilter
 }, "id" | "code">
 
 export type AreaOrderByWithAggregationInput = {
@@ -235,6 +238,7 @@ export type AreaCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sensors?: Prisma.SensorCreateNestedManyWithoutAreaInput
+  teams?: Prisma.TeamCreateNestedManyWithoutAreaInput
 }
 
 export type AreaUncheckedCreateInput = {
@@ -244,6 +248,7 @@ export type AreaUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sensors?: Prisma.SensorUncheckedCreateNestedManyWithoutAreaInput
+  teams?: Prisma.TeamUncheckedCreateNestedManyWithoutAreaInput
 }
 
 export type AreaUpdateInput = {
@@ -253,6 +258,7 @@ export type AreaUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sensors?: Prisma.SensorUpdateManyWithoutAreaNestedInput
+  teams?: Prisma.TeamUpdateManyWithoutAreaNestedInput
 }
 
 export type AreaUncheckedUpdateInput = {
@@ -262,6 +268,7 @@ export type AreaUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sensors?: Prisma.SensorUncheckedUpdateManyWithoutAreaNestedInput
+  teams?: Prisma.TeamUncheckedUpdateManyWithoutAreaNestedInput
 }
 
 export type AreaCreateManyInput = {
@@ -339,12 +346,27 @@ export type AreaUpdateOneRequiredWithoutSensorsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AreaUpdateToOneWithWhereWithoutSensorsInput, Prisma.AreaUpdateWithoutSensorsInput>, Prisma.AreaUncheckedUpdateWithoutSensorsInput>
 }
 
+export type AreaCreateNestedOneWithoutTeamsInput = {
+  create?: Prisma.XOR<Prisma.AreaCreateWithoutTeamsInput, Prisma.AreaUncheckedCreateWithoutTeamsInput>
+  connectOrCreate?: Prisma.AreaCreateOrConnectWithoutTeamsInput
+  connect?: Prisma.AreaWhereUniqueInput
+}
+
+export type AreaUpdateOneRequiredWithoutTeamsNestedInput = {
+  create?: Prisma.XOR<Prisma.AreaCreateWithoutTeamsInput, Prisma.AreaUncheckedCreateWithoutTeamsInput>
+  connectOrCreate?: Prisma.AreaCreateOrConnectWithoutTeamsInput
+  upsert?: Prisma.AreaUpsertWithoutTeamsInput
+  connect?: Prisma.AreaWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AreaUpdateToOneWithWhereWithoutTeamsInput, Prisma.AreaUpdateWithoutTeamsInput>, Prisma.AreaUncheckedUpdateWithoutTeamsInput>
+}
+
 export type AreaCreateWithoutSensorsInput = {
   id?: string
   code: string
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  teams?: Prisma.TeamCreateNestedManyWithoutAreaInput
 }
 
 export type AreaUncheckedCreateWithoutSensorsInput = {
@@ -353,6 +375,7 @@ export type AreaUncheckedCreateWithoutSensorsInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  teams?: Prisma.TeamUncheckedCreateNestedManyWithoutAreaInput
 }
 
 export type AreaCreateOrConnectWithoutSensorsInput = {
@@ -377,6 +400,7 @@ export type AreaUpdateWithoutSensorsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teams?: Prisma.TeamUpdateManyWithoutAreaNestedInput
 }
 
 export type AreaUncheckedUpdateWithoutSensorsInput = {
@@ -385,6 +409,59 @@ export type AreaUncheckedUpdateWithoutSensorsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teams?: Prisma.TeamUncheckedUpdateManyWithoutAreaNestedInput
+}
+
+export type AreaCreateWithoutTeamsInput = {
+  id?: string
+  code: string
+  name: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sensors?: Prisma.SensorCreateNestedManyWithoutAreaInput
+}
+
+export type AreaUncheckedCreateWithoutTeamsInput = {
+  id?: string
+  code: string
+  name: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sensors?: Prisma.SensorUncheckedCreateNestedManyWithoutAreaInput
+}
+
+export type AreaCreateOrConnectWithoutTeamsInput = {
+  where: Prisma.AreaWhereUniqueInput
+  create: Prisma.XOR<Prisma.AreaCreateWithoutTeamsInput, Prisma.AreaUncheckedCreateWithoutTeamsInput>
+}
+
+export type AreaUpsertWithoutTeamsInput = {
+  update: Prisma.XOR<Prisma.AreaUpdateWithoutTeamsInput, Prisma.AreaUncheckedUpdateWithoutTeamsInput>
+  create: Prisma.XOR<Prisma.AreaCreateWithoutTeamsInput, Prisma.AreaUncheckedCreateWithoutTeamsInput>
+  where?: Prisma.AreaWhereInput
+}
+
+export type AreaUpdateToOneWithWhereWithoutTeamsInput = {
+  where?: Prisma.AreaWhereInput
+  data: Prisma.XOR<Prisma.AreaUpdateWithoutTeamsInput, Prisma.AreaUncheckedUpdateWithoutTeamsInput>
+}
+
+export type AreaUpdateWithoutTeamsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sensors?: Prisma.SensorUpdateManyWithoutAreaNestedInput
+}
+
+export type AreaUncheckedUpdateWithoutTeamsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sensors?: Prisma.SensorUncheckedUpdateManyWithoutAreaNestedInput
 }
 
 
@@ -394,10 +471,12 @@ export type AreaUncheckedUpdateWithoutSensorsInput = {
 
 export type AreaCountOutputType = {
   sensors: number
+  teams: number
 }
 
 export type AreaCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sensors?: boolean | AreaCountOutputTypeCountSensorsArgs
+  teams?: boolean | AreaCountOutputTypeCountTeamsArgs
 }
 
 /**
@@ -417,6 +496,13 @@ export type AreaCountOutputTypeCountSensorsArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.SensorWhereInput
 }
 
+/**
+ * AreaCountOutputType without action
+ */
+export type AreaCountOutputTypeCountTeamsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamWhereInput
+}
+
 
 export type AreaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -425,6 +511,7 @@ export type AreaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAt?: boolean
   updatedAt?: boolean
   sensors?: boolean | Prisma.Area$sensorsArgs<ExtArgs>
+  teams?: boolean | Prisma.Area$teamsArgs<ExtArgs>
   _count?: boolean | Prisma.AreaCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["area"]>
 
@@ -455,6 +542,7 @@ export type AreaSelectScalar = {
 export type AreaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "createdAt" | "updatedAt", ExtArgs["result"]["area"]>
 export type AreaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sensors?: boolean | Prisma.Area$sensorsArgs<ExtArgs>
+  teams?: boolean | Prisma.Area$teamsArgs<ExtArgs>
   _count?: boolean | Prisma.AreaCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AreaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -464,6 +552,7 @@ export type $AreaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "Area"
   objects: {
     sensors: Prisma.$SensorPayload<ExtArgs>[]
+    teams: Prisma.$TeamPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -866,6 +955,7 @@ readonly fields: AreaFieldRefs;
 export interface Prisma__AreaClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sensors<T extends Prisma.Area$sensorsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Area$sensorsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SensorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  teams<T extends Prisma.Area$teamsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Area$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1314,6 +1404,30 @@ export type Area$sensorsArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.SensorScalarFieldEnum | Prisma.SensorScalarFieldEnum[]
+}
+
+/**
+ * Area.teams
+ */
+export type Area$teamsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Team
+   */
+  select?: Prisma.TeamSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Team
+   */
+  omit?: Prisma.TeamOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamInclude<ExtArgs> | null
+  where?: Prisma.TeamWhereInput
+  orderBy?: Prisma.TeamOrderByWithRelationInput | Prisma.TeamOrderByWithRelationInput[]
+  cursor?: Prisma.TeamWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamScalarFieldEnum | Prisma.TeamScalarFieldEnum[]
 }
 
 /**

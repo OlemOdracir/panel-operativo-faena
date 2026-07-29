@@ -133,6 +133,13 @@ export type EnumIncidentStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel> | $Enums.IncidentStatus
 }
 
+export type EnumIncidentSeverityFilter<$PrismaModel = never> = {
+  equals?: $Enums.IncidentSeverity | Prisma.EnumIncidentSeverityFieldRefInput<$PrismaModel>
+  in?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel> | $Enums.IncidentSeverity
+}
+
 export type DateTimeNullableFilter<$PrismaModel = never> = {
   equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel> | null
   in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -169,6 +176,16 @@ export type EnumIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel>
+}
+
+export type EnumIncidentSeverityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.IncidentSeverity | Prisma.EnumIncidentSeverityFieldRefInput<$PrismaModel>
+  in?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumIncidentSeverityWithAggregatesFilter<$PrismaModel> | $Enums.IncidentSeverity
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
 }
 
 export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -423,6 +440,13 @@ export type NestedEnumIncidentStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel> | $Enums.IncidentStatus
 }
 
+export type NestedEnumIncidentSeverityFilter<$PrismaModel = never> = {
+  equals?: $Enums.IncidentSeverity | Prisma.EnumIncidentSeverityFieldRefInput<$PrismaModel>
+  in?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel> | $Enums.IncidentSeverity
+}
+
 export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
   equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel> | null
   in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -453,6 +477,16 @@ export type NestedEnumIncidentStatusWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumIncidentStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumIncidentSeverityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.IncidentSeverity | Prisma.EnumIncidentSeverityFieldRefInput<$PrismaModel>
+  in?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.IncidentSeverity[] | Prisma.ListEnumIncidentSeverityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumIncidentSeverityWithAggregatesFilter<$PrismaModel> | $Enums.IncidentSeverity
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
 }
 
 export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {

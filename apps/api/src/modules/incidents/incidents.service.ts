@@ -95,6 +95,7 @@ export class IncidentsService {
     return {
       id: typed.id,
       status: typed.status,
+      severity: typed.severity,
       sensorId: typed.sensorId,
       sensorCode: typed.sensor.code,
       areaName: typed.sensor.area.name,

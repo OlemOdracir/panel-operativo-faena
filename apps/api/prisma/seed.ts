@@ -2,6 +2,7 @@ import argon2 from 'argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../dist/generated/prisma/client.js';
 import { IncidentStatus, Role } from '../dist/generated/prisma/enums.js';
+import { calculateIncidentSeverity } from '@faena/contracts';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL is required for the seed');
@@ -86,13 +87,13 @@ async function main(): Promise<void> {
   await Promise.all([
     prisma.team.upsert({
       where: { code: 'MANT-MEC' },
-      update: { name: 'Mantenimiento mecánico', active: true },
-      create: { code: 'MANT-MEC', name: 'Mantenimiento mecánico' },
+      update: { name: 'Mantenimiento mecánico', active: true, areaId: areas[0].id },
+      create: { code: 'MANT-MEC', name: 'Mantenimiento mecánico', areaId: areas[0].id },
     }),
     prisma.team.upsert({
       where: { code: 'MANT-ELEC' },
-      update: { name: 'Mantenimiento eléctrico', active: true },
-      create: { code: 'MANT-ELEC', name: 'Mantenimiento eléctrico' },
+      update: { name: 'Mantenimiento eléctrico', active: true, areaId: areas[1].id },
+      create: { code: 'MANT-ELEC', name: 'Mantenimiento eléctrico', areaId: areas[1].id },
     }),
   ]);
 
@@ -120,7 +121,15 @@ async function main(): Promise<void> {
         });
         if (!active)
           await prisma.incident.create({
-            data: { sensorId: sensor.id, triggerReadingId: reading.id },
+            data: {
+              sensorId: sensor.id,
+              triggerReadingId: reading.id,
+              severity: calculateIncidentSeverity(
+                value,
+                Number(sensor.minValue),
+                Number(sensor.maxValue),
+              ),
+            },
           });
       }
     }

@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { isOutOfRange, type ReadingInput } from '@faena/contracts';
+import { calculateIncidentSeverity, isOutOfRange, type ReadingInput } from '@faena/contracts';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -30,8 +30,8 @@ export class ReadingsService {
         let incidentCreated = false;
         if (outOfRange) {
           const inserted = await tx.$executeRaw`
-          INSERT INTO incidents (sensor_id, trigger_reading_id)
-          VALUES (${sensor.id}::uuid, ${reading.id}::uuid)
+          INSERT INTO incidents (sensor_id, trigger_reading_id, severity)
+          VALUES (${sensor.id}::uuid, ${reading.id}::uuid, ${calculateIncidentSeverity(input.value, Number(sensor.minValue), Number(sensor.maxValue))}::"IncidentSeverity")
           ON CONFLICT DO NOTHING
         `;
           incidentCreated = inserted > 0;

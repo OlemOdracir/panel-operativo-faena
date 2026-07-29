@@ -29,6 +29,7 @@ export type IncidentMinAggregateOutputType = {
   sensorId: string | null
   triggerReadingId: string | null
   status: $Enums.IncidentStatus | null
+  severity: $Enums.IncidentSeverity | null
   openedAt: Date | null
   acknowledgedAt: Date | null
   resolvedAt: Date | null
@@ -41,6 +42,7 @@ export type IncidentMaxAggregateOutputType = {
   sensorId: string | null
   triggerReadingId: string | null
   status: $Enums.IncidentStatus | null
+  severity: $Enums.IncidentSeverity | null
   openedAt: Date | null
   acknowledgedAt: Date | null
   resolvedAt: Date | null
@@ -53,6 +55,7 @@ export type IncidentCountAggregateOutputType = {
   sensorId: number
   triggerReadingId: number
   status: number
+  severity: number
   openedAt: number
   acknowledgedAt: number
   resolvedAt: number
@@ -67,6 +70,7 @@ export type IncidentMinAggregateInputType = {
   sensorId?: true
   triggerReadingId?: true
   status?: true
+  severity?: true
   openedAt?: true
   acknowledgedAt?: true
   resolvedAt?: true
@@ -79,6 +83,7 @@ export type IncidentMaxAggregateInputType = {
   sensorId?: true
   triggerReadingId?: true
   status?: true
+  severity?: true
   openedAt?: true
   acknowledgedAt?: true
   resolvedAt?: true
@@ -91,6 +96,7 @@ export type IncidentCountAggregateInputType = {
   sensorId?: true
   triggerReadingId?: true
   status?: true
+  severity?: true
   openedAt?: true
   acknowledgedAt?: true
   resolvedAt?: true
@@ -176,6 +182,7 @@ export type IncidentGroupByOutputType = {
   sensorId: string
   triggerReadingId: string
   status: $Enums.IncidentStatus
+  severity: $Enums.IncidentSeverity
   openedAt: Date
   acknowledgedAt: Date | null
   resolvedAt: Date | null
@@ -209,6 +216,7 @@ export type IncidentWhereInput = {
   sensorId?: Prisma.UuidFilter<"Incident"> | string
   triggerReadingId?: Prisma.UuidFilter<"Incident"> | string
   status?: Prisma.EnumIncidentStatusFilter<"Incident"> | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFilter<"Incident"> | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string
   acknowledgedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
@@ -226,6 +234,7 @@ export type IncidentOrderByWithRelationInput = {
   sensorId?: Prisma.SortOrder
   triggerReadingId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  severity?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -246,6 +255,7 @@ export type IncidentWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.IncidentWhereInput | Prisma.IncidentWhereInput[]
   sensorId?: Prisma.UuidFilter<"Incident"> | string
   status?: Prisma.EnumIncidentStatusFilter<"Incident"> | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFilter<"Incident"> | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string
   acknowledgedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
@@ -263,6 +273,7 @@ export type IncidentOrderByWithAggregationInput = {
   sensorId?: Prisma.SortOrder
   triggerReadingId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  severity?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -281,6 +292,7 @@ export type IncidentScalarWhereWithAggregatesInput = {
   sensorId?: Prisma.UuidWithAggregatesFilter<"Incident"> | string
   triggerReadingId?: Prisma.UuidWithAggregatesFilter<"Incident"> | string
   status?: Prisma.EnumIncidentStatusWithAggregatesFilter<"Incident"> | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityWithAggregatesFilter<"Incident"> | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeWithAggregatesFilter<"Incident"> | Date | string
   acknowledgedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Incident"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Incident"> | Date | string | null
@@ -291,6 +303,7 @@ export type IncidentScalarWhereWithAggregatesInput = {
 export type IncidentCreateInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -306,6 +319,7 @@ export type IncidentUncheckedCreateInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -317,6 +331,7 @@ export type IncidentUncheckedCreateInput = {
 export type IncidentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -332,6 +347,7 @@ export type IncidentUncheckedUpdateInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -345,6 +361,7 @@ export type IncidentCreateManyInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -355,6 +372,7 @@ export type IncidentCreateManyInput = {
 export type IncidentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -365,6 +383,7 @@ export type IncidentUncheckedUpdateManyInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -392,6 +411,7 @@ export type IncidentCountOrderByAggregateInput = {
   sensorId?: Prisma.SortOrder
   triggerReadingId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  severity?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   acknowledgedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
@@ -404,6 +424,7 @@ export type IncidentMaxOrderByAggregateInput = {
   sensorId?: Prisma.SortOrder
   triggerReadingId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  severity?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   acknowledgedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
@@ -416,6 +437,7 @@ export type IncidentMinOrderByAggregateInput = {
   sensorId?: Prisma.SortOrder
   triggerReadingId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  severity?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   acknowledgedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
@@ -499,6 +521,10 @@ export type IncidentUncheckedUpdateOneWithoutTriggerReadingNestedInput = {
 
 export type EnumIncidentStatusFieldUpdateOperationsInput = {
   set?: $Enums.IncidentStatus
+}
+
+export type EnumIncidentSeverityFieldUpdateOperationsInput = {
+  set?: $Enums.IncidentSeverity
 }
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -612,6 +638,7 @@ export type IncidentUpdateOneWithoutWorkOrdersNestedInput = {
 export type IncidentCreateWithoutSensorInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -625,6 +652,7 @@ export type IncidentUncheckedCreateWithoutSensorInput = {
   id?: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -667,6 +695,7 @@ export type IncidentScalarWhereInput = {
   sensorId?: Prisma.UuidFilter<"Incident"> | string
   triggerReadingId?: Prisma.UuidFilter<"Incident"> | string
   status?: Prisma.EnumIncidentStatusFilter<"Incident"> | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFilter<"Incident"> | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string
   acknowledgedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Incident"> | Date | string | null
@@ -677,6 +706,7 @@ export type IncidentScalarWhereInput = {
 export type IncidentCreateWithoutTriggerReadingInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -690,6 +720,7 @@ export type IncidentUncheckedCreateWithoutTriggerReadingInput = {
   id?: string
   sensorId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -717,6 +748,7 @@ export type IncidentUpdateToOneWithWhereWithoutTriggerReadingInput = {
 export type IncidentUpdateWithoutTriggerReadingInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -730,6 +762,7 @@ export type IncidentUncheckedUpdateWithoutTriggerReadingInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -741,6 +774,7 @@ export type IncidentUncheckedUpdateWithoutTriggerReadingInput = {
 export type IncidentCreateWithoutAcknowledgedByInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -755,6 +789,7 @@ export type IncidentUncheckedCreateWithoutAcknowledgedByInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -775,6 +810,7 @@ export type IncidentCreateManyAcknowledgedByInputEnvelope = {
 export type IncidentCreateWithoutResolvedByInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -789,6 +825,7 @@ export type IncidentUncheckedCreateWithoutResolvedByInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -841,6 +878,7 @@ export type IncidentUpdateManyWithWhereWithoutResolvedByInput = {
 export type IncidentCreateWithoutWorkOrdersInput = {
   id?: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -855,6 +893,7 @@ export type IncidentUncheckedCreateWithoutWorkOrdersInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -881,6 +920,7 @@ export type IncidentUpdateToOneWithWhereWithoutWorkOrdersInput = {
 export type IncidentUpdateWithoutWorkOrdersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -895,6 +935,7 @@ export type IncidentUncheckedUpdateWithoutWorkOrdersInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -906,6 +947,7 @@ export type IncidentCreateManySensorInput = {
   id?: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -916,6 +958,7 @@ export type IncidentCreateManySensorInput = {
 export type IncidentUpdateWithoutSensorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -929,6 +972,7 @@ export type IncidentUncheckedUpdateWithoutSensorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -941,6 +985,7 @@ export type IncidentUncheckedUpdateManyWithoutSensorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -953,6 +998,7 @@ export type IncidentCreateManyAcknowledgedByInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -964,6 +1010,7 @@ export type IncidentCreateManyResolvedByInput = {
   sensorId: string
   triggerReadingId: string
   status?: $Enums.IncidentStatus
+  severity?: $Enums.IncidentSeverity
   openedAt?: Date | string
   acknowledgedAt?: Date | string | null
   resolvedAt?: Date | string | null
@@ -973,6 +1020,7 @@ export type IncidentCreateManyResolvedByInput = {
 export type IncidentUpdateWithoutAcknowledgedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -987,6 +1035,7 @@ export type IncidentUncheckedUpdateWithoutAcknowledgedByInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -999,6 +1048,7 @@ export type IncidentUncheckedUpdateManyWithoutAcknowledgedByInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1008,6 +1058,7 @@ export type IncidentUncheckedUpdateManyWithoutAcknowledgedByInput = {
 export type IncidentUpdateWithoutResolvedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1022,6 +1073,7 @@ export type IncidentUncheckedUpdateWithoutResolvedByInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1034,6 +1086,7 @@ export type IncidentUncheckedUpdateManyWithoutResolvedByInput = {
   sensorId?: Prisma.StringFieldUpdateOperationsInput | string
   triggerReadingId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
+  severity?: Prisma.EnumIncidentSeverityFieldUpdateOperationsInput | $Enums.IncidentSeverity
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1076,6 +1129,7 @@ export type IncidentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   sensorId?: boolean
   triggerReadingId?: boolean
   status?: boolean
+  severity?: boolean
   openedAt?: boolean
   acknowledgedAt?: boolean
   resolvedAt?: boolean
@@ -1094,6 +1148,7 @@ export type IncidentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   sensorId?: boolean
   triggerReadingId?: boolean
   status?: boolean
+  severity?: boolean
   openedAt?: boolean
   acknowledgedAt?: boolean
   resolvedAt?: boolean
@@ -1110,6 +1165,7 @@ export type IncidentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   sensorId?: boolean
   triggerReadingId?: boolean
   status?: boolean
+  severity?: boolean
   openedAt?: boolean
   acknowledgedAt?: boolean
   resolvedAt?: boolean
@@ -1126,6 +1182,7 @@ export type IncidentSelectScalar = {
   sensorId?: boolean
   triggerReadingId?: boolean
   status?: boolean
+  severity?: boolean
   openedAt?: boolean
   acknowledgedAt?: boolean
   resolvedAt?: boolean
@@ -1133,7 +1190,7 @@ export type IncidentSelectScalar = {
   resolvedById?: boolean
 }
 
-export type IncidentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sensorId" | "triggerReadingId" | "status" | "openedAt" | "acknowledgedAt" | "resolvedAt" | "acknowledgedById" | "resolvedById", ExtArgs["result"]["incident"]>
+export type IncidentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sensorId" | "triggerReadingId" | "status" | "severity" | "openedAt" | "acknowledgedAt" | "resolvedAt" | "acknowledgedById" | "resolvedById", ExtArgs["result"]["incident"]>
 export type IncidentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
   triggerReading?: boolean | Prisma.ReadingDefaultArgs<ExtArgs>
@@ -1169,6 +1226,7 @@ export type $IncidentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     sensorId: string
     triggerReadingId: string
     status: $Enums.IncidentStatus
+    severity: $Enums.IncidentSeverity
     openedAt: Date
     acknowledgedAt: Date | null
     resolvedAt: Date | null
@@ -1606,6 +1664,7 @@ export interface IncidentFieldRefs {
   readonly sensorId: Prisma.FieldRef<"Incident", 'String'>
   readonly triggerReadingId: Prisma.FieldRef<"Incident", 'String'>
   readonly status: Prisma.FieldRef<"Incident", 'IncidentStatus'>
+  readonly severity: Prisma.FieldRef<"Incident", 'IncidentSeverity'>
   readonly openedAt: Prisma.FieldRef<"Incident", 'DateTime'>
   readonly acknowledgedAt: Prisma.FieldRef<"Incident", 'DateTime'>
   readonly resolvedAt: Prisma.FieldRef<"Incident", 'DateTime'>

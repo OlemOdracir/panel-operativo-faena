@@ -1022,6 +1022,7 @@ export const IncidentScalarFieldEnum = {
   sensorId: 'sensorId',
   triggerReadingId: 'triggerReadingId',
   status: 'status',
+  severity: 'severity',
   openedAt: 'openedAt',
   acknowledgedAt: 'acknowledgedAt',
   resolvedAt: 'resolvedAt',
@@ -1037,6 +1038,7 @@ export const TeamScalarFieldEnum = {
   code: 'code',
   name: 'name',
   active: 'active',
+  areaId: 'areaId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1163,6 +1165,20 @@ export type EnumIncidentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'IncidentStatus[]'
  */
 export type ListEnumIncidentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncidentStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'IncidentSeverity'
+ */
+export type EnumIncidentSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncidentSeverity'>
+    
+
+
+/**
+ * Reference to a field of type 'IncidentSeverity[]'
+ */
+export type ListEnumIncidentSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncidentSeverity[]'>
     
 
 

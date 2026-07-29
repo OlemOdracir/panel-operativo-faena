@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const roleSchema = z.enum(['SUPERVISOR', 'ADMIN']);
 export const incidentStatusSchema = z.enum(['OPEN', 'ACKNOWLEDGED', 'RESOLVED']);
+export const incidentSeveritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 export const workOrderStatusSchema = z.enum(['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'CLOSED']);
 export const prioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 
@@ -41,6 +42,7 @@ export const paginationQuerySchema = z.strictObject({
 export const incidentResponseSchema = z.strictObject({
   id: uuidSchema,
   status: incidentStatusSchema,
+  severity: incidentSeveritySchema,
   sensorId: uuidSchema,
   sensorCode: z.string(),
   areaName: z.string(),
@@ -86,6 +88,7 @@ export const apiErrorSchema = z.strictObject({
 
 export type Role = z.infer<typeof roleSchema>;
 export type IncidentStatus = z.infer<typeof incidentStatusSchema>;
+export type IncidentSeverity = z.infer<typeof incidentSeveritySchema>;
 export type WorkOrderStatus = z.infer<typeof workOrderStatusSchema>;
 export type Priority = z.infer<typeof prioritySchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -96,6 +99,20 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 
 export function isOutOfRange(value: number, minValue: number, maxValue: number): boolean {
   return value < minValue || value > maxValue;
+}
+
+export function calculateIncidentSeverity(
+  value: number,
+  minValue: number,
+  maxValue: number,
+): IncidentSeverity {
+  const range = Math.max(maxValue - minValue, Number.EPSILON);
+  const deviation = value < minValue ? minValue - value : value > maxValue ? value - maxValue : 0;
+  const ratio = deviation / range;
+  if (ratio > 0.3) return 'CRITICAL';
+  if (ratio > 0.15) return 'HIGH';
+  if (ratio > 0.05) return 'MEDIUM';
+  return 'LOW';
 }
 
 export function canTransitionIncident(from: IncidentStatus, to: IncidentStatus): boolean {
