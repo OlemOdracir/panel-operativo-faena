@@ -76,6 +76,8 @@ corepack pnpm docs:check
 
 La suite API incluye pruebas de dominio, seguridad y ciclo de vida. La integración real de PostgreSQL se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed. El frontend cubre los estados de carga, error, vacío y contenido; su umbral inicial es 40% y se incrementa junto con nuevas vistas.
 
+La cobertura del frontend mantiene umbrales mínimos de 65% en ramas, líneas y sentencias y 50% en funciones. El objetivo de evolución es alcanzar 80% global.
+
 ## API principal
 
 Todas las rutas usan el prefijo `/api/v1`.
