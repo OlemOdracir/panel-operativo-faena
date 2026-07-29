@@ -92,6 +92,71 @@ test('mobile shell opens a temporary drawer and closes after navigation', async 
   await expect(navigation).toBeHidden();
 });
 
+test('keyboard users can tab through the primary navigation and activate a link', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+  await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
+
+  const dashboardLink = page.getByRole('link', { name: 'Resumen' });
+  const incidentsLink = page.getByRole('link', { name: 'Incidentes' });
+  const workOrdersLink = page.getByRole('link', { name: 'Órdenes de trabajo' });
+
+  await dashboardLink.focus();
+  await expect(dashboardLink).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(incidentsLink).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(workOrdersLink).toBeFocused();
+
+  await incidentsLink.focus();
+  await expect(incidentsLink).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
+});
+
+test('collapses the desktop navigation drawer with the keyboard', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+  await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
+
+  const toggle = page.getByRole('button', { name: 'Colapsar menú' });
+  await toggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Expandir menú' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Expandir menú' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Colapsar menú' })).toBeVisible();
+});
+
+test('opens the mobile drawer with the keyboard and restores focus after closing with Escape', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+  await expect(page.getByRole('heading', { name: 'Estado de la faena' })).toBeVisible();
+
+  const menuButton = page.getByRole('button', { name: 'Abrir menú' });
+  await menuButton.focus();
+  await page.keyboard.press('Enter');
+
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
+  await expect(navigation).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(navigation).toBeHidden();
+  await expect(menuButton).toBeFocused();
+});
+
 test('API rejects operational data without a session', async () => {
   const client = await request.newContext();
   const response = await client.get(`${apiURL}/incidents`);

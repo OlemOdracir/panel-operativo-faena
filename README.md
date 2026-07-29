@@ -98,28 +98,36 @@ corepack pnpm docs:check
 
 La auditoría E2E con Playwright requiere que el sistema esté levantado con Docker Compose. La primera vez instala Chromium con `corepack pnpm exec playwright install chromium`. Usa `PLAYWRIGHT_BASE_URL` y `E2E_API_URL` para cambiar las URLs, o `E2E_SUPERVISOR_PASSWORD` y `E2E_ADMIN_PASSWORD` para no leer las credenciales de seed desde el `.env` local.
 
-La suite API incluye pruebas de dominio, seguridad, ciclo de vida e integración real con PostgreSQL. Esta última se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed. El frontend cubre los estados de carga, error, vacío y contenido, además de las mutaciones operacionales y el cierre de sesión.
+La suite API incluye pruebas de dominio, seguridad, ciclo de vida e integración real con PostgreSQL. Esta última se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed; en CI corre siempre contra el servicio `postgres` del workflow. Para ejecutarla en local sin pasos manuales, usa:
 
-Resultados actuales: backend sobre 85% de cobertura global; frontend sobre 80% en sentencias y líneas, 85% en ramas y 71% en funciones.
+```powershell
+corepack pnpm test:integration
+```
 
-| Control              | Herramienta                          | Propósito                                                           |
-| -------------------- | ------------------------------------ | ------------------------------------------------------------------- |
-| Formato              | Prettier                             | Mantener un estilo uniforme en todo el monorepo                     |
-| Codificación         | `encoding:check`                     | Exigir UTF-8 válido y detectar caracteres de reemplazo o mojibake   |
-| Análisis backend     | ESLint y TypeScript ESLint           | Detectar errores, tipos inseguros y malas prácticas                 |
-| Análisis frontend    | Oxlint                               | Revisar React y TypeScript sin advertencias                         |
-| Tipado               | TypeScript estricto                  | Verificar contratos y evitar `any` explícito                        |
-| Validación           | Zod                                  | Validar entradas y respuestas en tiempo de ejecución                |
-| Pruebas backend      | Node Test Runner                     | Cubrir dominio, servicios, seguridad e integración                  |
-| Pruebas frontend     | Vitest y Testing Library             | Verificar estados, formularios y acciones del usuario               |
-| Auditoría E2E        | Playwright                           | Validar login, roles, panel y rutas protegidas en un navegador real |
-| Cobertura            | V8 Coverage                          | Impedir regresiones de cobertura                                    |
-| Persistencia         | Prisma Validate y migraciones reales | Comprobar esquema y compatibilidad con PostgreSQL                   |
-| Dependencias         | `pnpm audit`                         | Rechazar vulnerabilidades productivas de severidad alta             |
-| Historial Git        | Commitlint, Husky y lint-staged      | Aplicar Conventional Commits y formato antes del commit             |
-| API                  | OpenAPI check                        | Verificar que la referencia incluya los endpoints requeridos        |
-| Contenedores         | Docker Compose validation            | Comprobar que la definición de servicios sea válida                 |
-| Integración continua | GitHub Actions                       | Ejecutar todos los controles desde un entorno limpio                |
+Este comando levanta el servicio `database` de Docker Compose, aplica migraciones y seed, y corre la suite de `@faena/api` con `RUN_DB_INTEGRATION=true`. La base de datos queda activa al terminar; detenla con `corepack pnpm compose:down`.
+
+El frontend cubre los estados de carga, error, vacío y contenido, además de las mutaciones operacionales y el cierre de sesión.
+
+Resultados actuales: backend sobre 85% de cobertura global; frontend sobre 90% en sentencias, ramas, funciones y líneas (umbral mínimo exigido en CI: 80% en las cuatro métricas).
+
+| Control              | Herramienta                          | Propósito                                                                                            |
+| -------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Formato              | Prettier                             | Mantener un estilo uniforme en todo el monorepo                                                      |
+| Codificación         | `encoding:check`                     | Exigir UTF-8 válido y detectar caracteres de reemplazo o mojibake                                    |
+| Análisis backend     | ESLint y TypeScript ESLint           | Detectar errores, tipos inseguros y malas prácticas                                                  |
+| Análisis frontend    | Oxlint                               | Revisar React y TypeScript sin advertencias                                                          |
+| Tipado               | TypeScript estricto                  | Verificar contratos y evitar `any` explícito                                                         |
+| Validación           | Zod                                  | Validar entradas y respuestas en tiempo de ejecución                                                 |
+| Pruebas backend      | Node Test Runner                     | Cubrir dominio, servicios, seguridad e integración                                                   |
+| Pruebas frontend     | Vitest y Testing Library             | Verificar estados, formularios y acciones del usuario                                                |
+| Auditoría E2E        | Playwright                           | Validar login, roles, navegación por teclado/foco del Drawer y rutas protegidas en un navegador real |
+| Cobertura            | V8 Coverage                          | Impedir regresiones de cobertura                                                                     |
+| Persistencia         | Prisma Validate y migraciones reales | Comprobar esquema y compatibilidad con PostgreSQL                                                    |
+| Dependencias         | `pnpm audit`                         | Rechazar vulnerabilidades productivas de severidad alta                                              |
+| Historial Git        | Commitlint, Husky y lint-staged      | Aplicar Conventional Commits y formato antes del commit                                              |
+| API                  | OpenAPI check                        | Verificar que la referencia incluya los endpoints requeridos                                         |
+| Contenedores         | Docker Compose validation            | Comprobar que la definición de servicios sea válida                                                  |
+| Integración continua | GitHub Actions                       | Ejecutar todos los controles desde un entorno limpio                                                 |
 
 ## API principal
 

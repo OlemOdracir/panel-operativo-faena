@@ -25,7 +25,7 @@
     "test:e2e": "corepack pnpm run test:build && node --test \"dist-test/**/*.e2e-spec.js\"",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:migrate": "prisma migrate deploy --config prisma.config.ts",
-    "prisma:seed": "pnpm build && tsx prisma/seed.ts"
+    "prisma:seed": "corepack pnpm build && tsx prisma/seed.ts"
   },
   "dependencies": {
     "@faena/contracts": "workspace:*",

@@ -125,7 +125,12 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByText('Prioridades operativas')).toBeInTheDocument());
     expect(screen.queryByText('Filtrar incidentes')).not.toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: /Incidentes/ }));
-    await waitFor(() => expect(screen.getByText('Filtrar incidentes')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Filtrar incidentes')).toBeInTheDocument(), {
+      timeout: 5_000,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: 'Molienda' })).toBeInTheDocument(),
+    );
     await user.selectOptions(
       screen.getByRole('combobox', { name: 'Área' }),
       '00000000-0000-4000-8000-000000000099',
@@ -574,6 +579,647 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Salir' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Salir' }));
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/logout'), expect.anything());
+  });
+
+  it('logs in successfully and lands on the operational dashboard', async () => {
+    const user = userEvent.setup();
+    let authenticated = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/csrf')) return new Response(JSON.stringify({ token: 'csrf-test' }));
+        if (url.includes('/auth/login')) {
+          authenticated = true;
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        }
+        if (url.includes('/auth/me')) {
+          if (!authenticated) return new Response('{}', { status: 401 });
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        }
+        if (url.includes('/sensors')) return new Response(JSON.stringify([]));
+        return new Response(
+          JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+        );
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Ingresa a la faena' })).toBeInTheDocument(),
+    );
+    await user.type(screen.getByLabelText('Contraseña'), 'super-secreto');
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
+    );
+  });
+
+  it('shows a dashboard error state when operational data fails to load', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents')) return new Response('{}', { status: 503 });
+        return new Response(
+          JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+        );
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+
+    await waitFor(
+      () => expect(screen.getByText('No se pudo completar la solicitud.')).toBeInTheDocument(),
+      { timeout: 3_000 },
+    );
+  });
+
+  it('shows dashboard metrics with live data and triggers a manual refresh', async () => {
+    const user = userEvent.setup();
+    const incidents = [
+      {
+        id: '11111111-0000-4000-8000-000000000110',
+        status: 'OPEN',
+        severity: 'CRITICAL',
+        sensorId: '22222222-0000-4000-8000-000000000210',
+        sensorCode: 'CHA-PRES-02',
+        areaName: 'Chancado',
+        value: 20,
+        minValue: 2,
+        maxValue: 10,
+        openedAt: '2026-01-01T00:00:00.000Z',
+        acknowledgedAt: null,
+        resolvedAt: null,
+        acknowledgedBy: null,
+        resolvedBy: null,
+      },
+    ];
+    const orders = [
+      {
+        id: '44444444-0000-4000-8000-000000000420',
+        title: 'Reemplazar filtro',
+        description: null,
+        priority: 'HIGH',
+        status: 'IN_PROGRESS',
+        incidentId: null,
+        teamId: '55555555-0000-4000-8000-000000000501',
+        teamName: 'Mantenimiento',
+        createdBy: userForTest.id,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        assignedAt: '2026-01-01T00:10:00.000Z',
+        startedAt: '2026-01-01T00:20:00.000Z',
+        closedAt: null,
+      },
+    ];
+    const sensors = [
+      {
+        id: '22222222-0000-4000-8000-000000000210',
+        code: 'CHA-PRES-02',
+        name: 'Presión chancador',
+        unit: 'psi',
+        minValue: 2,
+        maxValue: 10,
+        areaId: '33333333-0000-4000-8000-000000000301',
+        area: {
+          id: '33333333-0000-4000-8000-000000000301',
+          code: 'CHA',
+          name: 'Chancado',
+        },
+      },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents'))
+          return new Response(
+            JSON.stringify({
+              data: incidents,
+              meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({
+              data: orders,
+              meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/sensors')) return new Response(JSON.stringify(sensors));
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Reemplazar filtro')).toBeInTheDocument());
+    expect(screen.getByText('1 en progreso')).toBeInTheDocument();
+
+    const callsBefore = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+    await user.click(screen.getByRole('button', { name: 'Actualizar' }));
+    await waitFor(() =>
+      expect((fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(callsBefore),
+    );
+  });
+
+  it('acknowledges an open incident and creates a work order from its detail page', async () => {
+    const user = userEvent.setup();
+    const incident = {
+      id: '11111111-0000-4000-8000-000000000111',
+      status: 'OPEN',
+      severity: 'HIGH',
+      sensorId: '22222222-0000-4000-8000-000000000211',
+      sensorCode: 'CHA-TEMP-01',
+      areaName: 'Chancado',
+      value: 90,
+      minValue: 0,
+      maxValue: 80,
+      openedAt: '2026-01-01T00:00:00.000Z',
+      acknowledgedAt: null,
+      resolvedAt: null,
+      acknowledgedBy: null,
+      resolvedBy: null,
+    };
+    const team = {
+      id: '55555555-0000-4000-8000-000000000509',
+      code: 'MANT',
+      name: 'Mantenimiento',
+      active: true,
+      areaId: '33333333-0000-4000-8000-000000000302',
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (init?.method === 'POST' && url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({
+              id: '44444444-0000-4000-8000-000000000499',
+              title: 'Reparar sensor de temperatura',
+              description: null,
+              priority: 'MEDIUM',
+              status: 'OPEN',
+              incidentId: incident.id,
+              teamId: null,
+              teamName: null,
+              createdBy: userForTest.id,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              assignedAt: null,
+              startedAt: null,
+              closedAt: null,
+            }),
+          );
+        if (url.includes('/incidents/')) return new Response(JSON.stringify(incident));
+        if (url.includes('/teams')) return new Response(JSON.stringify([team]));
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={[`/incidents/${incident.id}`]}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /CHA-TEMP-01/ })).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Tomar incidente' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/incidents/${incident.id}/status`),
+      expect.anything(),
+    );
+
+    await user.type(screen.getByLabelText('Título'), 'Reparar sensor de temperatura');
+    await user.click(screen.getByRole('button', { name: 'Crear orden' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/work-orders'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('resolves an acknowledged incident from its detail page', async () => {
+    const user = userEvent.setup();
+    const incident = {
+      id: '11111111-0000-4000-8000-000000000112',
+      status: 'ACKNOWLEDGED',
+      severity: 'MEDIUM',
+      sensorId: '22222222-0000-4000-8000-000000000212',
+      sensorCode: 'MOL-VIB-01',
+      areaName: 'Molienda',
+      value: 11,
+      minValue: 0,
+      maxValue: 10,
+      openedAt: '2026-01-01T00:00:00.000Z',
+      acknowledgedAt: '2026-01-01T01:00:00.000Z',
+      resolvedAt: null,
+      acknowledgedBy: 'Supervisión',
+      resolvedBy: null,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents/')) return new Response(JSON.stringify(incident));
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={[`/incidents/${incident.id}`]}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /MOL-VIB-01/ })).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Resolver incidente' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/incidents/${incident.id}/status`),
+      expect.anything(),
+    );
+  });
+
+  it('clears filters and narrows incidents by status, severity, and sensor', async () => {
+    const user = userEvent.setup();
+    const sensorId1 = '22222222-0000-4000-8000-000000000201';
+    const areaId1 = '33333333-0000-4000-8000-000000000301';
+    const acknowledgedIncidentId = '11111111-0000-4000-8000-000000000102';
+    const incidents = [
+      {
+        id: '11111111-0000-4000-8000-000000000101',
+        status: 'OPEN',
+        severity: 'CRITICAL',
+        sensorId: sensorId1,
+        sensorCode: 'CHA-PRES-01',
+        areaName: 'Chancado',
+        value: 15,
+        minValue: 2,
+        maxValue: 10,
+        openedAt: '2026-01-01T00:00:00.000Z',
+        acknowledgedAt: null,
+        resolvedAt: null,
+        acknowledgedBy: null,
+        resolvedBy: null,
+      },
+      {
+        id: acknowledgedIncidentId,
+        status: 'ACKNOWLEDGED',
+        severity: 'LOW',
+        sensorId: '22222222-0000-4000-8000-000000000202',
+        sensorCode: 'MOL-VIB-01',
+        areaName: 'Molienda',
+        value: 5,
+        minValue: 0,
+        maxValue: 12,
+        openedAt: '2026-01-01T01:00:00.000Z',
+        acknowledgedAt: '2026-01-01T02:00:00.000Z',
+        resolvedAt: null,
+        acknowledgedBy: 'Supervisión',
+        resolvedBy: null,
+      },
+      {
+        id: '11111111-0000-4000-8000-000000000103',
+        status: 'RESOLVED',
+        severity: 'MEDIUM',
+        sensorId: sensorId1,
+        sensorCode: 'CHA-PRES-01',
+        areaName: 'Chancado',
+        value: 8,
+        minValue: 2,
+        maxValue: 10,
+        openedAt: '2026-01-01T02:00:00.000Z',
+        acknowledgedAt: '2026-01-01T02:30:00.000Z',
+        resolvedAt: '2026-01-01T03:00:00.000Z',
+        acknowledgedBy: 'Supervisión',
+        resolvedBy: 'Supervisión',
+      },
+    ];
+    const sensors = [
+      {
+        id: sensorId1,
+        code: 'CHA-PRES-01',
+        name: 'Presión chancador',
+        unit: 'psi',
+        minValue: 2,
+        maxValue: 10,
+        areaId: areaId1,
+        area: { id: areaId1, code: 'CHA', name: 'Chancado' },
+      },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents'))
+          return new Response(
+            JSON.stringify({
+              data: incidents,
+              meta: { page: 1, pageSize: 20, total: 3, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/sensors')) return new Response(JSON.stringify(sensors));
+        if (url.includes('/areas'))
+          return new Response(JSON.stringify([{ id: areaId1, code: 'CHA', name: 'Chancado' }]));
+        return new Response(
+          JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+        );
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/incidents']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(document.querySelectorAll('.list-row')).toHaveLength(3));
+
+    await user.click(screen.getByRole('button', { name: 'Resolver' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/incidents/${acknowledgedIncidentId}/status`),
+      expect.anything(),
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'OPEN');
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('status=OPEN'), expect.anything());
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Severidad' }), 'CRITICAL');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('severity=CRITICAL'),
+      expect.anything(),
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Sensor' }), sensorId1);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`sensorId=${sensorId1}`),
+      expect.anything(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+    expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveValue('');
+  });
+
+  it('supports the work-order board filters, lifecycle transitions, and form cancellation', async () => {
+    const user = userEvent.setup();
+    const teamId1 = '55555555-0000-4000-8000-000000000501';
+    const openOrder = {
+      id: '44444444-0000-4000-8000-000000000401',
+      title: 'Reparar cinta',
+      description: null,
+      priority: 'LOW',
+      status: 'OPEN',
+      incidentId: null,
+      teamId: null,
+      teamName: null,
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: null,
+      startedAt: null,
+      closedAt: null,
+    };
+    const assignedOrder = {
+      id: '44444444-0000-4000-8000-000000000402',
+      title: 'Lubricar rodillos',
+      description: null,
+      priority: 'MEDIUM',
+      status: 'ASSIGNED',
+      incidentId: null,
+      teamId: teamId1,
+      teamName: 'Mantenimiento',
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: '2026-01-01T00:30:00.000Z',
+      startedAt: null,
+      closedAt: null,
+    };
+    const inProgressOrder = {
+      id: '44444444-0000-4000-8000-000000000403',
+      title: 'Cambiar rodamiento',
+      description: null,
+      priority: 'HIGH',
+      status: 'IN_PROGRESS',
+      incidentId: null,
+      teamId: teamId1,
+      teamName: 'Mantenimiento',
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: '2026-01-01T00:30:00.000Z',
+      startedAt: '2026-01-01T01:00:00.000Z',
+      closedAt: null,
+    };
+    const closedOrder = {
+      id: '44444444-0000-4000-8000-000000000404',
+      title: 'Calibrar sensor',
+      description: null,
+      priority: 'CRITICAL',
+      status: 'CLOSED',
+      incidentId: null,
+      teamId: teamId1,
+      teamName: 'Mantenimiento',
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: '2026-01-01T00:30:00.000Z',
+      startedAt: '2026-01-01T01:00:00.000Z',
+      closedAt: '2026-01-01T05:00:00.000Z',
+    };
+    const orders = [openOrder, assignedOrder, inProgressOrder, closedOrder];
+    const team = {
+      id: teamId1,
+      code: 'MANT',
+      name: 'Mantenimiento',
+      active: true,
+      areaId: '33333333-0000-4000-8000-000000000302',
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({
+              data: orders,
+              meta: { page: 1, pageSize: 20, total: orders.length, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/teams')) return new Response(JSON.stringify([team]));
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/work-orders']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Reparar cinta')).toBeInTheDocument());
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: `Asignar ${openOrder.title}` }),
+      team.id,
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/work-orders/${openOrder.id}/assignment`),
+      expect.anything(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Iniciar' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/work-orders/${assignedOrder.id}/status`),
+      expect.anything(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/work-orders/${inProgressOrder.id}/status`),
+      expect.anything(),
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'CLOSED');
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('status=CLOSED'), expect.anything());
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Prioridad' }), 'CRITICAL');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('priority=CRITICAL'),
+      expect.anything(),
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Equipo' }), team.id);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`teamId=${team.id}`),
+      expect.anything(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+    expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveValue('');
+
+    await user.click(screen.getByRole('button', { name: 'Nueva orden' }));
+    expect(screen.getByText('Crear orden de trabajo')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByText('Crear orden de trabajo')).not.toBeInTheDocument();
+  });
+
+  it('collapses the desktop navigation drawer', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/sensors')) return new Response(JSON.stringify([]));
+        return new Response(
+          JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+        );
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Colapsar menú' }));
+    expect(screen.getByRole('button', { name: 'Expandir menú' })).toBeInTheDocument();
+  });
+
+  it('opens the mobile navigation drawer and closes it from the backdrop', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      })),
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/sensors')) return new Response(JSON.stringify([]));
+        return new Response(
+          JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+        );
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
+
+    const backdrop = document.querySelector('.MuiBackdrop-root');
+    expect(backdrop).not.toBeNull();
+    await user.click(backdrop as Element);
   });
 });
 
