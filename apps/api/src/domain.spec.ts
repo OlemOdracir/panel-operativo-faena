@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import {
+  canTransitionIncident,
+  canTransitionWorkOrder,
+  incidentStatusUpdateSchema,
+  isOutOfRange,
+  workOrderCreateSchema,
+} from '@faena/contracts';
+
+void describe('operational domain rules', () => {
+  void it('treats sensor boundaries as valid readings', () => {
+    assert.equal(isOutOfRange(10, 10, 80), false);
+    assert.equal(isOutOfRange(80, 10, 80), false);
+    assert.equal(isOutOfRange(9.99, 10, 80), true);
+    assert.equal(isOutOfRange(80.01, 10, 80), true);
+  });
+
+  void it('only allows sequential incident transitions', () => {
+    assert.equal(canTransitionIncident('OPEN', 'ACKNOWLEDGED'), true);
+    assert.equal(canTransitionIncident('ACKNOWLEDGED', 'RESOLVED'), true);
+    assert.equal(canTransitionIncident('OPEN', 'RESOLVED'), false);
+    assert.equal(canTransitionIncident('RESOLVED', 'OPEN'), false);
+  });
+
+  void it('only allows sequential work-order transitions', () => {
+    assert.equal(canTransitionWorkOrder('OPEN', 'ASSIGNED'), true);
+    assert.equal(canTransitionWorkOrder('ASSIGNED', 'IN_PROGRESS'), true);
+    assert.equal(canTransitionWorkOrder('IN_PROGRESS', 'CLOSED'), true);
+    assert.equal(canTransitionWorkOrder('OPEN', 'CLOSED'), false);
+    assert.equal(canTransitionWorkOrder('CLOSED', 'OPEN'), false);
+  });
+
+  void it('rejects unknown input fields before persistence', () => {
+    const result = incidentStatusUpdateSchema.safeParse({ status: 'OPEN', userId: 'forbidden' });
+    assert.equal(result.success, false);
+  });
+
+  void it('applies the default work-order priority', () => {
+    const result = workOrderCreateSchema.parse({ title: 'Inspección de correa' });
+    assert.equal(result.priority, 'MEDIUM');
+  });
+});
