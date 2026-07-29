@@ -4,9 +4,12 @@ import {
   canTransitionIncident,
   canTransitionWorkOrder,
   calculateIncidentSeverity,
+  idParamsSchema,
+  incidentListQuerySchema,
   incidentStatusUpdateSchema,
   isOutOfRange,
   workOrderCreateSchema,
+  workOrderListQuerySchema,
 } from '@faena/contracts';
 
 void describe('operational domain rules', () => {
@@ -47,5 +50,18 @@ void describe('operational domain rules', () => {
   void it('applies the default work-order priority', () => {
     const result = workOrderCreateSchema.parse({ title: 'Inspección de correa' });
     assert.equal(result.priority, 'MEDIUM');
+  });
+
+  void it('validates list filters and route identifiers at the API boundary', () => {
+    assert.equal(incidentListQuerySchema.safeParse({ status: 'NOT_A_STATUS' }).success, false);
+    assert.equal(
+      workOrderListQuerySchema.safeParse({ status: 'OPEN,NOT_A_STATUS' }).success,
+      false,
+    );
+    assert.deepEqual(workOrderListQuerySchema.parse({ status: 'OPEN,ASSIGNED' }).status, [
+      'OPEN',
+      'ASSIGNED',
+    ]);
+    assert.equal(idParamsSchema.safeParse({ id: 'not-a-uuid' }).success, false);
   });
 });

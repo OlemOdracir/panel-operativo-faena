@@ -8,7 +8,7 @@ export const incidentSeveritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL
 export const workOrderStatusSchema = z.enum(['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'CLOSED']);
 export const prioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 
-const uuidSchema = z.string().uuid();
+export const uuidSchema = z.string().uuid();
 const dateTimeSchema = z.string().datetime({ offset: true });
 
 export const loginSchema = z.strictObject({
@@ -32,14 +32,33 @@ export const workOrderCreateSchema = z.strictObject({
 export const workOrderAssignmentSchema = z.strictObject({ teamId: uuidSchema });
 export const workOrderStatusUpdateSchema = z.strictObject({ status: workOrderStatusSchema });
 
-export const paginationQuerySchema = z.strictObject({
+const paginationFields = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  status: z.string().optional(),
+};
+
+export const incidentListQuerySchema = z.strictObject({
+  ...paginationFields,
+  status: incidentStatusSchema.optional(),
   areaId: uuidSchema.optional(),
   sensorId: uuidSchema.optional(),
-  teamId: uuidSchema.optional(),
 });
+
+export const workOrderStatusListSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .transform((value) => value.split(',').map((status) => status.trim()))
+  .pipe(z.array(workOrderStatusSchema).min(1));
+
+export const workOrderListQuerySchema = z.strictObject({
+  ...paginationFields,
+  status: workOrderStatusListSchema.optional(),
+  teamId: uuidSchema.optional(),
+  incidentId: uuidSchema.optional(),
+});
+
+export const idParamsSchema = z.strictObject({ id: uuidSchema });
 
 export const incidentResponseSchema = z.strictObject({
   id: uuidSchema,
@@ -98,6 +117,9 @@ export type ReadingInput = z.infer<typeof readingSchema>;
 export type IncidentResponse = z.infer<typeof incidentResponseSchema>;
 export type WorkOrderResponse = z.infer<typeof workOrderResponseSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
+export type IncidentListQuery = z.infer<typeof incidentListQuerySchema>;
+export type WorkOrderListQuery = z.infer<typeof workOrderListQuerySchema>;
+export type IdParams = z.infer<typeof idParamsSchema>;
 
 export function isOutOfRange(value: number, minValue: number, maxValue: number): boolean {
   return value < minValue || value > maxValue;

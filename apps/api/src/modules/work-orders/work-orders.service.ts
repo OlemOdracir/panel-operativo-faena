@@ -8,7 +8,7 @@ import { canAdvanceWorkOrder, canAssignWorkOrder } from './domain/work-order.rul
 type WorkOrderFilters = {
   page: number;
   pageSize: number;
-  status?: string;
+  status?: WorkOrderStatus[];
   teamId?: string;
   incidentId?: string;
 };
@@ -21,9 +21,8 @@ export class WorkOrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(filters: WorkOrderFilters) {
-    const statuses = filters.status?.split(',').filter(Boolean);
     const where = {
-      ...(statuses?.length ? { status: { in: statuses as WorkOrderStatus[] } } : {}),
+      ...(filters.status?.length ? { status: { in: filters.status } } : {}),
       ...(filters.teamId ? { teamId: filters.teamId } : {}),
       ...(filters.incidentId ? { incidentId: filters.incidentId } : {}),
     };

@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UsePipes } from '@nestjs/common';
 import {
-  paginationQuerySchema,
+  idParamsSchema,
   workOrderAssignmentSchema,
   workOrderCreateSchema,
   workOrderStatusUpdateSchema,
+  workOrderListQuerySchema,
+  type IdParams,
+  type WorkOrderListQuery,
 } from '@faena/contracts';
 import { CurrentUser } from '../auth/auth.decorators';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -15,17 +18,8 @@ export class WorkOrdersController {
   constructor(private readonly orders: WorkOrdersService) {}
 
   @Get()
-  @UsePipes(new ZodValidationPipe(paginationQuerySchema))
-  list(
-    @Query()
-    query: {
-      page: number;
-      pageSize: number;
-      status?: string;
-      teamId?: string;
-      incidentId?: string;
-    },
-  ) {
+  @UsePipes(new ZodValidationPipe(workOrderListQuerySchema))
+  list(@Query() query: WorkOrderListQuery) {
     return this.orders.list(query);
   }
 
@@ -45,27 +39,27 @@ export class WorkOrdersController {
   }
 
   @Get(':id')
-  find(@Param('id') id: string) {
-    return this.orders.findById(id);
+  find(@Param(new ZodValidationPipe(idParamsSchema)) params: IdParams) {
+    return this.orders.findById(params.id);
   }
 
   @Patch(':id/assignment')
   @UsePipes(new ZodValidationPipe(workOrderAssignmentSchema))
   assign(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(idParamsSchema)) params: IdParams,
     @Body() body: { teamId: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.orders.assign(id, body.teamId, user);
+    return this.orders.assign(params.id, body.teamId, user);
   }
 
   @Patch(':id/status')
   @UsePipes(new ZodValidationPipe(workOrderStatusUpdateSchema))
   changeStatus(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(idParamsSchema)) params: IdParams,
     @Body() body: { status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'CLOSED' },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.orders.changeStatus(id, body.status, user);
+    return this.orders.changeStatus(params.id, body.status, user);
   }
 }
