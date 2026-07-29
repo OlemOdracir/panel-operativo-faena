@@ -290,6 +290,203 @@ describe('App', () => {
     await user.type(screen.getByLabelText('Contraseña'), 'password');
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeEnabled();
   });
+
+  it('offers incident acknowledgement and resolution actions', async () => {
+    const user = userEvent.setup();
+    const incidents = [
+      {
+        id: '00000000-0000-4000-8000-000000000021',
+        status: 'OPEN',
+        severity: 'HIGH',
+        sensorId: '00000000-0000-4000-8000-000000000031',
+        sensorCode: 'CHA-TEMP-01',
+        areaName: 'Chancado',
+        value: 90,
+        minValue: 0,
+        maxValue: 80,
+        openedAt: '2026-01-01T00:00:00.000Z',
+        acknowledgedAt: null,
+        resolvedAt: null,
+        acknowledgedBy: null,
+        resolvedBy: null,
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000022',
+        status: 'ACKNOWLEDGED',
+        severity: 'MEDIUM',
+        sensorId: '00000000-0000-4000-8000-000000000032',
+        sensorCode: 'MOL-VIB-01',
+        areaName: 'Molienda',
+        value: 12,
+        minValue: 0,
+        maxValue: 10,
+        openedAt: '2026-01-01T00:00:00.000Z',
+        acknowledgedAt: '2026-01-01T01:00:00.000Z',
+        resolvedAt: null,
+        acknowledgedBy: 'Supervisor',
+        resolvedBy: null,
+      },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents'))
+          return new Response(
+            JSON.stringify({
+              data: incidents,
+              meta: { page: 1, pageSize: 20, total: 2, totalPages: 1 },
+            }),
+          );
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/incidents']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('CHA-TEMP-01')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Tomar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resolver' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Tomar' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/incidents/00000000-0000-4000-8000-000000000021/status'),
+      expect.anything(),
+    );
+  });
+
+  it('allows assigning an open work order to a team', async () => {
+    const user = userEvent.setup();
+    const order = {
+      id: '00000000-0000-4000-8000-000000000041',
+      title: 'Inspeccionar correa',
+      description: null,
+      priority: 'MEDIUM',
+      status: 'OPEN',
+      incidentId: null,
+      teamId: null,
+      teamName: null,
+      createdBy: userForTest.id,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      assignedAt: null,
+      startedAt: null,
+      closedAt: null,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({
+              data: [order],
+              meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+            }),
+          );
+        if (url.includes('/teams'))
+          return new Response(
+            JSON.stringify([
+              {
+                id: '00000000-0000-4000-8000-000000000051',
+                code: 'MANT',
+                name: 'Mantenimiento',
+                active: true,
+                areaId: '00000000-0000-4000-8000-000000000061',
+              },
+            ]),
+          );
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/work-orders']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText('Inspeccionar correa')).toBeInTheDocument());
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Asignar Inspeccionar correa' }),
+      '00000000-0000-4000-8000-000000000051',
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/work-orders/00000000-0000-4000-8000-000000000041/assignment'),
+      expect.anything(),
+    );
+  });
+
+  it('creates a preventive work order from the board form', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/work-orders'))
+          return new Response(
+            JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+          );
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/work-orders']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Nueva orden' })).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Nueva orden' }));
+    await user.type(screen.getByLabelText('Título'), 'Inspección preventiva');
+    await user.click(screen.getByRole('button', { name: 'Crear orden' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/work-orders'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('logs out from the authenticated shell', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        return new Response('{}');
+      }),
+    );
+
+    render(
+      <BrowserRouter>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Salir' })).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Salir' }));
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/logout'), expect.anything());
+  });
 });
 
 const userForTest = {
