@@ -65,6 +65,21 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Check OpenAPI artifact
+        run: pnpm run docs:check
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Test reading generator
+        working-directory: tools/reading-generator
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+          python -m pytest -q
+
       - name: Validate Compose file
         env:
           POSTGRES_DB: faena

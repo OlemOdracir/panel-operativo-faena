@@ -20,7 +20,8 @@
     "prepare": "husky",
     "compose:up": "docker compose up --build",
     "compose:down": "docker compose down",
-    "compose:logs": "docker compose logs --follow"
+    "compose:logs": "docker compose logs --follow",
+    "docs:check": "node scripts/check-openapi.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
