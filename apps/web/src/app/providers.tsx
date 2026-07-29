@@ -1,5 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import 'dayjs/locale/es';
 import { type PropsWithChildren, useState } from 'react';
+import { faenaTheme } from './theme';
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -14,5 +19,15 @@ export function AppProviders({ children }: PropsWithChildren) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <ThemeProvider theme={faenaTheme}>
+      <LocalizationProvider
+        dateAdapter={AdapterDayjs}
+        adapterLocale="es"
+        localeText={{ clearButtonLabel: 'Limpiar', todayButtonLabel: 'Hoy' }}
+      >
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
 }

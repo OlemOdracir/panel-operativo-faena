@@ -1,8 +1,6 @@
 /**
  * Catálogo único de textos visibles y mensajes de dominio en español de Chile.
- *
- * Los valores persistidos y los contratos REST conservan sus enums en inglés;
- * esta capa los traduce exclusivamente en los límites de presentación y API.
+ * Los enums persistidos permanecen en inglés y solo se traducen en presentación.
  */
 export const esCL = {
   locale: 'es-CL',
@@ -137,16 +135,8 @@ export const esCL = {
     IN_PROGRESS: 'En progreso',
     CLOSED: 'Cerradas',
   },
-  severity: {
-    LOW: 'Baja',
-    MEDIUM: 'Media',
-    HIGH: 'Alta',
-    CRITICAL: 'Crítica',
-  },
-  role: {
-    SUPERVISOR: 'Supervisor',
-    ADMIN: 'Administrador',
-  },
+  severity: { LOW: 'Baja', MEDIUM: 'Media', HIGH: 'Alta', CRITICAL: 'Crítica' },
+  role: { SUPERVISOR: 'Supervisor', ADMIN: 'Administrador' },
   api: {
     requestFailed: 'No se pudo completar la solicitud.',
     unexpectedServerError: 'Error inesperado del servidor.',
@@ -176,22 +166,17 @@ type RoleKey = keyof typeof esCL.role;
 function hasKey<T extends object>(object: T, key: string): key is Extract<keyof T, string> {
   return key in object;
 }
-
 export function labelStatus(value: string): string {
   return hasKey(esCL.status, value) ? esCL.status[value as StatusKey] : value;
 }
-
 export function labelSeverity(value: string): string {
   return hasKey(esCL.severity, value) ? esCL.severity[value as SeverityKey] : value;
 }
-
 export function labelRole(value: string): string {
   return hasKey(esCL.role, value) ? esCL.role[value as RoleKey] : value;
 }
-
 export function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat(esCL.locale, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  return new Intl.DateTimeFormat(esCL.locale, { dateStyle: 'short', timeStyle: 'short' }).format(
+    new Date(value),
+  );
 }

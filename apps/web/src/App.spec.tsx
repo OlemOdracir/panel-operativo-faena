@@ -104,6 +104,12 @@ describe('App', () => {
             JSON.stringify({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
           );
         }
+        if (url.includes('/areas'))
+          return new Response(
+            JSON.stringify([
+              { id: '00000000-0000-4000-8000-000000000099', name: 'Molienda', code: 'MOL' },
+            ]),
+          );
         return new Response(JSON.stringify([]));
       }),
     );
@@ -120,9 +126,14 @@ describe('App', () => {
     expect(screen.queryByText('Filtrar incidentes')).not.toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: /Incidentes/ }));
     await waitFor(() => expect(screen.getByText('Filtrar incidentes')).toBeInTheDocument());
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Área' }), 'Molienda');
-    expect(document.querySelectorAll('.list-row')).toHaveLength(1);
-    expect(document.querySelector('.list-row')).toHaveTextContent('MOL-VIB-01');
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Área' }),
+      '00000000-0000-4000-8000-000000000099',
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('areaId=00000000-0000-4000-8000-000000000099'),
+      expect.anything(),
+    );
   });
 
   it('provides the query client to the component tree', () => {
