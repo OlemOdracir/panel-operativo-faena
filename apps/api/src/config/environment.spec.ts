@@ -19,6 +19,7 @@ void describe('validateEnvironment', () => {
       CORS_ORIGIN: 'http://localhost:5173',
       DATABASE_URL: 'postgresql://user:password@localhost:5432/faena',
       JWT_SECRET: 'a-development-only-secret-over-32-characters',
+      AUTH_COOKIE_SECURE: false,
       LOG_LEVEL: 'error',
       NODE_ENV: 'test',
       SWAGGER_ENABLED: false,

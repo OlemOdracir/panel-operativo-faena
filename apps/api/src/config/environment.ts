@@ -20,6 +20,7 @@ const environmentSchema = z.object({
   CORS_ORIGIN: corsOrigins.default('http://localhost:5173'),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   JWT_SECRET: z.string().min(32),
+  AUTH_COOKIE_SECURE: booleanFromString.default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   SWAGGER_ENABLED: booleanFromString.default(true),
 });
