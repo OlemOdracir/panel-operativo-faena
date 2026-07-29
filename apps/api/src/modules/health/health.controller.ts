@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '../auth/auth.decorators';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HealthService, type HealthStatus } from './health.service';
 
@@ -8,6 +9,7 @@ export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Comprueba que la API está disponible' })
   @ApiOkResponse({
     description: 'La API está disponible.',
