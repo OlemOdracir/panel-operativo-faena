@@ -13,13 +13,14 @@ void describe('PostgreSQL integration', { skip: !enabled }, () => {
   });
 
   void it('exposes the seeded operational catalog and readings', async () => {
-    const [areas, sensors, readings, incidents, teams, users] = await Promise.all([
+    const [areas, sensors, readings, incidents, teams, users, workOrders] = await Promise.all([
       prisma.area.count(),
       prisma.sensor.count(),
       prisma.reading.count(),
       prisma.incident.count(),
       prisma.team.count(),
       prisma.user.count(),
+      prisma.workOrder.count(),
     ]);
 
     assert.equal(areas, 3);
@@ -28,6 +29,7 @@ void describe('PostgreSQL integration', { skip: !enabled }, () => {
     assert.ok(incidents >= 6);
     assert.equal(teams, 2);
     assert.equal(users, 2);
+    assert.ok(workOrders >= 4);
   });
 
   void it('keeps the partial active-incident uniqueness invariant', async () => {
