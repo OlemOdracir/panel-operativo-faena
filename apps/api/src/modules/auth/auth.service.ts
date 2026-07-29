@@ -7,6 +7,10 @@ import type { Environment } from '../../config/environment';
 import type { AuthenticatedUser } from './auth.types';
 import { esCL } from '@faena/contracts';
 
+// Public, intentionally unusable hash that equalizes failed login verification time.
+const DUMMY_PASSWORD_HASH =
+  '$argon2id$v=19$m=65536,p=4,t=3$yE2apaJrWB15yso4TEZphg$DAifBACwQXlyDf11533jaY+k6pm5avEl/IUfiXHUKxM';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,7 +24,9 @@ export class AuthService {
     password: string,
   ): Promise<{ token: string; user: AuthenticatedUser }> {
     const user = await this.prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-    const valid = user?.active ? await argon2.verify(user.passwordHash, password) : false;
+    const passwordHash = user?.active ? user.passwordHash : DUMMY_PASSWORD_HASH;
+    const passwordMatches = await argon2.verify(passwordHash, password).catch(() => false);
+    const valid = Boolean(user?.active) && passwordMatches;
     if (!valid || !user)
       throw new UnauthorizedException({
         code: 'INVALID_CREDENTIALS',
