@@ -1,0 +1,283 @@
+﻿{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/auth/csrf": {
+      "get": {
+        "operationId": "AuthController_csrf",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/areas": {
+      "get": {
+        "operationId": "CatalogController_areas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Catalog"]
+      }
+    },
+    "/api/v1/sensors": {
+      "get": {
+        "operationId": "CatalogController_sensors",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Catalog"]
+      }
+    },
+    "/api/v1/teams": {
+      "get": {
+        "operationId": "CatalogController_teams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Catalog"]
+      }
+    },
+    "/api/v1/readings": {
+      "post": {
+        "operationId": "ReadingsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Readings"]
+      }
+    },
+    "/api/v1/incidents": {
+      "get": {
+        "operationId": "IncidentsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Incidents"]
+      }
+    },
+    "/api/v1/incidents/{id}": {
+      "get": {
+        "operationId": "IncidentsController_find",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Incidents"]
+      }
+    },
+    "/api/v1/incidents/{id}/status": {
+      "patch": {
+        "operationId": "IncidentsController_changeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Incidents"]
+      }
+    },
+    "/api/v1/work-orders": {
+      "get": {
+        "operationId": "WorkOrdersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["WorkOrders"]
+      },
+      "post": {
+        "operationId": "WorkOrdersController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["WorkOrders"]
+      }
+    },
+    "/api/v1/work-orders/{id}": {
+      "get": {
+        "operationId": "WorkOrdersController_find",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["WorkOrders"]
+      }
+    },
+    "/api/v1/work-orders/{id}/assignment": {
+      "patch": {
+        "operationId": "WorkOrdersController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["WorkOrders"]
+      }
+    },
+    "/api/v1/work-orders/{id}/status": {
+      "patch": {
+        "operationId": "WorkOrdersController_changeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["WorkOrders"]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "La API está disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "service": "panel-operativo-faena-api",
+                    "status": "ok",
+                    "timestamp": "2026-01-01T00:00:00.000Z",
+                    "version": "0.1.0"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Comprueba que la API está disponible",
+        "tags": ["health"]
+      }
+    }
+  },
+  "info": {
+    "title": "Panel Operativo de Faena API",
+    "description": "API para monitoreo de sensores y gestión del trabajo en terreno.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "faena_session"
+      }
+    },
+    "schemas": {}
+  }
+}

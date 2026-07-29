@@ -2,70 +2,56 @@
 
 ## Decisión principal
 
-El sistema se implementará como un **monolito modular**. El tamaño y los límites del problema no
-justifican microservicios; mantener API, reglas y transacciones en un proceso reduce complejidad sin
-impedir separar responsabilidades por dominio.
+El sistema es un monolito modular. NestJS concentra los casos de uso y las transacciones; React consume contratos JSON compartidos desde `packages/contracts`; PostgreSQL conserva el estado operacional.
 
 ```text
-Navegador
-   │
-   ▼
 React + TanStack Query
-   │ HTTP/JSON
-   ▼
-NestJS
-   ├── auth
-   ├── readings
-   ├── incidents
-   ├── work-orders
-   └── catalog
-         │
-         ▼
-     PostgreSQL
+          │ HTTP/JSON + cookies
+          ▼
+NestJS modular
+  auth · catalog · readings · incidents · work-orders
+          │ Prisma + transacciones
+          ▼
+PostgreSQL
 ```
 
-## Organización
+## Modelo relacional
 
-- `apps/api`: adaptador HTTP, casos de uso, reglas de negocio y persistencia.
-- `apps/web`: interfaz organizada por capacidades, no por tipo técnico global.
-- `docs`: decisiones e invariantes que no son evidentes al leer una sola clase.
+```text
+areas 1──N sensors 1──N readings
+                    │       └── 0..1 incident trigger
+                    └──N incidents ──N work_orders
+teams 1──N work_orders
+users ── auditoría de incidentes y órdenes
+```
 
-Cada módulo de negocio de la API debe mantener controladores delgados. Los controladores validan y
-traducen HTTP; los servicios coordinan casos de uso; las funciones de dominio deciden si una
-operación es válida.
+Las siete tablas son `areas`, `sensors`, `readings`, `incidents`, `teams`, `users` y `work_orders`. Todas las FKs tienen índice. Los timestamps son UTC y cada lectura conserva `measured_at` y `received_at`.
 
-## Modelo previsto
+## Flujo de ingesta
 
-El núcleo relacional tendrá siete tablas:
+1. Zod valida `sensorId`, valor numérico finito y `measuredAt`.
+2. La API busca el rango inclusivo del sensor.
+3. La lectura se inserta en una transacción.
+4. Si el valor está fuera de rango, se intenta abrir un incidente con `ON CONFLICT DO NOTHING`.
+5. El índice parcial de PostgreSQL garantiza como máximo un incidente `OPEN` o `ACKNOWLEDGED` por sensor.
+6. La respuesta informa la lectura y el incidente activo asociado.
 
-1. `areas`
-2. `sensors`
-3. `readings`
-4. `incidents`
-5. `teams`
-6. `users`
-7. `work_orders`
+Una lectura dentro del rango no resuelve incidentes; la resolución es una acción operacional explícita.
 
-Todas las relaciones tendrán claves foráneas y los índices necesarios en el lado referenciante. Las
-lecturas conservarán `measured_at` y `received_at` para no confundir el tiempo del sensor con el de
-ingesta.
+## Estados
 
-## Invariantes previstas
+- Incidente: `OPEN → ACKNOWLEDGED → RESOLVED`.
+- Orden: `OPEN → ASSIGNED → IN_PROGRESS → CLOSED`.
+- La asignación exige un equipo activo.
+- Una orden cerrada no admite mutaciones posteriores.
+- `incident_id` en una orden es opcional para permitir trabajo preventivo.
 
-- El rango válido del sensor es inclusivo.
-- Una lectura fuera del rango abre un incidente dentro de la misma transacción.
-- Un sensor no puede tener más de un incidente activo.
-- Las órdenes avanzan `OPEN → ASSIGNED → IN_PROGRESS → CLOSED`.
-- Una orden asignada debe tener equipo.
-- Una orden cerrada no vuelve a modificarse.
-- La identidad de las acciones se obtiene de la sesión autenticada, nunca del body.
+## Autenticación
 
-Estas reglas se convertirán en constraints cuando sea posible y en código de dominio con pruebas
-cuando dependan de una transición.
+La autenticación es global por defecto. Login y health son rutas públicas explícitas. El JWT breve vive en una cookie HttpOnly; el frontend nunca guarda credenciales en Web Storage. Las mutaciones requieren el token CSRF de doble envío y un origen permitido.
 
-## Seguridad
+Supervisor gestiona incidentes y órdenes. Admin tiene además permiso para ingerir lecturas. La identidad usada en cada auditoría se obtiene de `request.user`, no de los cuerpos HTTP.
 
-La API aplicará autenticación por defecto y declarará explícitamente las rutas públicas. Las
-contraseñas se almacenarán con un algoritmo adaptativo; los tokens serán de vida limitada; los
-errores externos no expondrán stacks ni detalles SQL. La configuración se valida durante el
-arranque para fallar antes de aceptar tráfico.
+## Operación
+
+Compose inicia PostgreSQL, aplica migraciones, ejecuta el seed idempotente y recién entonces inicia la API. El generador Python es opcional y solo usa `POST /readings`; la regla de incidentes permanece en NestJS.
