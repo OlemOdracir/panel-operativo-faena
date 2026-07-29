@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { LayoutDashboard, ListTodo, Radio, TriangleAlert } from 'lucide-react';
 import {
   esCL,
   formatDateTime,
@@ -125,19 +126,22 @@ function Panel({ user }: { user: UserResponse }) {
         <aside className="sidebar" aria-label={esCL.navigation.label}>
           <span className="sidebar-label">{esCL.navigation.operation}</span>
           <Link className={location.pathname === '/' ? 'active' : ''} to="/">
-            <span aria-hidden="true">⌂</span> {esCL.navigation.dashboard}
+            <LayoutDashboard aria-hidden="true" className="nav-icon" size={18} strokeWidth={1.75} />
+            {esCL.navigation.dashboard}
           </Link>
           <Link
             className={location.pathname.startsWith('/incidents') ? 'active' : ''}
             to="/incidents"
           >
-            <span aria-hidden="true">◈</span> {esCL.navigation.incidents}
+            <TriangleAlert aria-hidden="true" className="nav-icon" size={18} strokeWidth={1.75} />
+            {esCL.navigation.incidents}
           </Link>
           <Link
             className={location.pathname.startsWith('/work-orders') ? 'active' : ''}
             to="/work-orders"
           >
-            <span aria-hidden="true">▦</span> {esCL.navigation.workOrders}
+            <ListTodo aria-hidden="true" className="nav-icon" size={18} strokeWidth={1.75} />
+            {esCL.navigation.workOrders}
           </Link>
         </aside>
         <div className="main-content">
@@ -181,7 +185,10 @@ function Dashboard() {
           <span className="eyebrow">{esCL.dashboard.eyebrow}</span>
           <h1>{esCL.dashboard.title}</h1>
         </div>
-        <span className="live-dot">● {esCL.dashboard.live}</span>
+        <span className="live-dot">
+          <Radio aria-hidden="true" size={16} strokeWidth={1.75} />
+          {esCL.dashboard.live}
+        </span>
       </div>
       <div className="metrics">
         <Metric
