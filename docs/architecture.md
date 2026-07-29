@@ -21,11 +21,11 @@ PostgreSQL
 areas 1──N sensors 1──N readings
                     │       └── 0..1 incident trigger
                     └──N incidents ──N work_orders
-teams 1──N work_orders
+areas 1──N teams 1──N work_orders
 users ── auditoría de incidentes y órdenes
 ```
 
-Las siete tablas son `areas`, `sensors`, `readings`, `incidents`, `teams`, `users` y `work_orders`. Todas las FKs tienen índice. Los timestamps son UTC y cada lectura conserva `measured_at` y `received_at`.
+Las siete tablas son `areas`, `sensors`, `readings`, `incidents`, `teams`, `users` y `work_orders`. Todas las FKs tienen índice. Los timestamps son UTC y cada lectura conserva `measured_at` y `received_at`. Los incidentes guardan severidad (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`) calculada al abrirse.
 
 ## Flujo de ingesta
 
@@ -51,6 +51,10 @@ Una lectura dentro del rango no resuelve incidentes; la resolución es una acci�
 La autenticación es global por defecto. Login y health son rutas públicas explícitas. El JWT breve vive en una cookie HttpOnly; el frontend nunca guarda credenciales en Web Storage. Las mutaciones requieren el token CSRF de doble envío y un origen permitido.
 
 Supervisor gestiona incidentes y órdenes. Admin tiene además permiso para ingerir lecturas. La identidad usada en cada auditoría se obtiene de `request.user`, no de los cuerpos HTTP.
+
+## Frontend
+
+React Router organiza resumen, lista y detalle de incidentes, y tablero de órdenes. TanStack Query mantiene consultas y refetch moderado; las mutaciones invalidan las claves relacionadas. Tailwind CSS 4 define tokens visuales y layout responsive; todas las consultas distinguen carga, error, vacío y contenido.
 
 ## Operación
 

@@ -6,6 +6,7 @@ Sistema full-stack para monitorear sensores mineros, abrir incidentes ante lectu
 
 - API NestJS modular con PostgreSQL, Prisma, Zod y Swagger.
 - Modelo relacional de áreas, sensores, lecturas, incidentes, equipos, usuarios y órdenes.
+- Severidad de incidentes y equipos vinculados a su área operacional.
 - Incidentes `OPEN → ACKNOWLEDGED → RESOLVED`.
 - Órdenes `OPEN → ASSIGNED → IN_PROGRESS → CLOSED`.
 - Autenticación con usuarios `SUPERVISOR` y `ADMIN`, cookie HttpOnly y CSRF.
@@ -13,6 +14,7 @@ Sistema full-stack para monitorear sensores mineros, abrir incidentes ante lectu
 - Seed reproducible con lecturas dentro y fuera de rango.
 - Generador opcional Python/pandas para simular lecturas en vivo.
 - Logs JSON con `X-Request-Id`.
+- Interfaz con Tailwind CSS 4, sidebar, detalle de incidentes y tablero Kanban.
 
 ## Requisitos
 
@@ -117,6 +119,8 @@ packages/contracts       esquemas Zod y tipos compartidos
 tools/reading-generator  simulador Python/pandas
 docs                     arquitectura, seguridad y API
 ```
+
+La interfaz usa Tailwind CSS 4 mediante `@tailwindcss/vite`, con tokens visuales definidos en `apps/web/src/index.css`. Los estilos específicos del dominio permanecen en `App.css` mientras la migración se completa por componentes.
 
 La arquitectura detallada, invariantes y decisiones están en [`docs/architecture.md`](docs/architecture.md) y los ADR en [`docs/adr/`](docs/adr/). Las prácticas de seguridad están en [`SECURITY.md`](SECURITY.md) y el modelo de amenazas en [`docs/threat-model.md`](docs/threat-model.md).
 
