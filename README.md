@@ -69,7 +69,10 @@ corepack pnpm lint
 corepack pnpm typecheck
 corepack pnpm test
 corepack pnpm build
+corepack pnpm docs:check
 ```
+
+La suite API incluye pruebas de dominio, seguridad y ciclo de vida. La integración real de PostgreSQL se activa con `RUN_DB_INTEGRATION=true` después de aplicar migraciones y seed. El frontend cubre los estados de carga, error, vacío y contenido; su umbral inicial es 40% y se incrementa junto con nuevas vistas.
 
 ## API principal
 
