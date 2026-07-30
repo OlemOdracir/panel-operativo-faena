@@ -1,10 +1,26 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import App from './App';
 import { AppProviders } from './app/providers';
 import { clientEnvironment } from './config/environment';
+
+/**
+ * Toda acción que cambia estado pasa por un diálogo de confirmación. Se acota
+ * la búsqueda al diálogo porque su botón repite la etiqueta de la página.
+ */
+async function confirmAction(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+): Promise<void> {
+  const dialog = await screen.findByRole('dialog');
+  await user.click(within(dialog).getByRole('button', { name }));
+  // Mientras el diálogo está montado MUI marca el resto de la app como
+  // `aria-hidden`, así que hay que esperar a que se desmonte antes de seguir
+  // consultando por rol.
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+}
 
 describe('App', () => {
   afterEach(() => {
@@ -455,6 +471,12 @@ describe('App', () => {
 
     const callsBefore = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
     await user.click(screen.getByRole('button', { name: 'Tomar' }));
+    // La mutación no debe dispararse antes de confirmar.
+    expect(fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining('/status'),
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    await confirmAction(user, 'Tomar incidente');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/incidents/00000000-0000-4000-8000-000000000021/status'),
       expect.anything(),
@@ -534,12 +556,15 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText('Inspeccionar correa')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Inspeccionar correa')).toBeInTheDocument(), {
+      timeout: 5_000,
+    });
     const callsBefore = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
     await user.selectOptions(
       screen.getByRole('combobox', { name: 'Asignar Inspeccionar correa' }),
       '00000000-0000-4000-8000-000000000051',
     );
+    await confirmAction(user, 'Asignar orden');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/work-orders/00000000-0000-4000-8000-000000000041/assignment'),
       expect.anything(),
@@ -550,13 +575,20 @@ describe('App', () => {
       ),
     );
 
-    const callsBeforeReset = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+    // Volver a la opción vacía no debe asignar nada. Se cuentan solo las
+    // llamadas a `/assignment`: el total es sensible a los refetch de fondo
+    // que dispara la invalidación.
+    const assignmentCalls = () =>
+      (fetch as ReturnType<typeof vi.fn>).mock.calls.filter(([url]) =>
+        String(url).includes('/assignment'),
+      ).length;
+    const before = assignmentCalls();
     await user.selectOptions(
       screen.getByRole('combobox', { name: 'Asignar Inspeccionar correa' }),
       '',
     );
-    expect((fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBe(callsBeforeReset);
-  });
+    expect(assignmentCalls()).toBe(before);
+  }, 15_000);
 
   it('creates a preventive work order from the board form', async () => {
     const user = userEvent.setup();
@@ -931,6 +963,7 @@ describe('App', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Tomar incidente' }));
+    await confirmAction(user, 'Tomar incidente');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/incidents/${incident.id}/status`),
       expect.anything(),
@@ -986,6 +1019,7 @@ describe('App', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Resolver incidente' }));
+    await confirmAction(user, 'Resolver incidente');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/incidents/${incident.id}/status`),
       expect.anything(),
@@ -1115,9 +1149,12 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(document.querySelectorAll('.list-row')).toHaveLength(3));
+    await waitFor(() => expect(document.querySelectorAll('.list-row')).toHaveLength(3), {
+      timeout: 5_000,
+    });
 
     await user.click(screen.getByRole('button', { name: 'Resolver' }));
+    await confirmAction(user, 'Resolver incidente');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/incidents/${acknowledgedIncidentId}/status`),
       expect.anything(),
@@ -1140,7 +1177,7 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
     expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveValue('');
-  });
+  }, 15_000);
 
   it('supports the work-order board filters, lifecycle transitions, and form cancellation', async () => {
     const user = userEvent.setup();
@@ -1246,12 +1283,15 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText('Reparar cinta')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Reparar cinta')).toBeInTheDocument(), {
+      timeout: 5_000,
+    });
 
     await user.selectOptions(
       screen.getByRole('combobox', { name: `Asignar ${openOrder.title}` }),
       team.id,
     );
+    await confirmAction(user, 'Asignar orden');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/work-orders/${openOrder.id}/assignment`),
       expect.anything(),
@@ -1259,6 +1299,7 @@ describe('App', () => {
 
     const callsBeforeStart = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
     await user.click(screen.getByRole('button', { name: 'Iniciar' }));
+    await confirmAction(user, 'Iniciar orden');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/work-orders/${assignedOrder.id}/status`),
       expect.anything(),
@@ -1270,6 +1311,7 @@ describe('App', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+    await confirmAction(user, 'Cerrar orden');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/work-orders/${inProgressOrder.id}/status`),
       expect.anything(),

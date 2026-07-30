@@ -19,12 +19,19 @@ declare module '@mui/material/Chip' {
   }
 }
 
+declare module '@mui/material/Button' {
+  interface ButtonPropsColorOverrides {
+    neutral: true;
+    serious: true;
+  }
+}
+
 /** `main` es el paso de marca; `light`, la tinta de etiqueta. */
 const tone = (key: StateTone) => ({
   main: state[key].mark,
   light: state[key].text,
   dark: state[key].mark,
-  contrastText: ink.onBrand,
+  contrastText: state[key].onMark,
 });
 
 /** Tono de la escala de estado → color de chip de MUI. */

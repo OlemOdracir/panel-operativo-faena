@@ -15,6 +15,8 @@ import { StatusChip } from '../../components/StatusChip';
 import { SeverityChip } from '../../components/SeverityChip';
 import { Loading } from '../../components/Loading';
 import { ErrorState } from '../../components/ErrorState';
+import { useConfirmAction } from '../../hooks/useConfirmAction';
+import { IconBack, IconResolve, IconTake } from '../../app/icons';
 
 export function IncidentDetailPage() {
   const { id = '' } = useParams();
@@ -38,13 +40,19 @@ export function IncidentDetailPage() {
       void client.invalidateQueries({ queryKey: incidentQueryKeys.all });
     },
   });
+  const confirm = useConfirmAction();
   if (incident.isPending) return <Loading />;
   if (incident.isError) return <ErrorState error={incident.error} />;
   const item = incident.data;
   return (
     <Stack spacing={3}>
-      <Button component={RouterLink} to="/incidents" sx={{ alignSelf: 'flex-start' }}>
-        ← {esCL.incidents.title}
+      <Button
+        component={RouterLink}
+        to="/incidents"
+        startIcon={<IconBack />}
+        sx={{ alignSelf: 'flex-start' }}
+      >
+        {esCL.incidents.title}
       </Button>
       <PageHeading
         eyebrow={esCL.incidents.detailEyebrow}
@@ -70,13 +78,30 @@ export function IncidentDetailPage() {
                 {item.status === 'OPEN' && (
                   <Button
                     variant="contained"
-                    onClick={() => change.mutate({ next: 'ACKNOWLEDGED' })}
+                    startIcon={<IconTake />}
+                    onClick={() =>
+                      confirm.request({
+                        ...esCL.confirm.incidentTake,
+                        tone: 'warning',
+                        onConfirm: () => change.mutate({ next: 'ACKNOWLEDGED' }),
+                      })
+                    }
                   >
                     {esCL.incidents.takeIncident}
                   </Button>
                 )}
                 {item.status === 'ACKNOWLEDGED' && (
-                  <Button variant="contained" onClick={() => change.mutate({ next: 'RESOLVED' })}>
+                  <Button
+                    variant="contained"
+                    startIcon={<IconResolve />}
+                    onClick={() =>
+                      confirm.request({
+                        ...esCL.confirm.incidentResolve,
+                        tone: 'good',
+                        onConfirm: () => change.mutate({ next: 'RESOLVED' }),
+                      })
+                    }
+                  >
                     {esCL.incidents.resolveIncident}
                   </Button>
                 )}
@@ -93,6 +118,7 @@ export function IncidentDetailPage() {
           />
         </Grid>
       </Grid>
+      {confirm.dialog}
     </Stack>
   );
 }

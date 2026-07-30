@@ -1,5 +1,5 @@
 import { Stack, TextField } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { IconSearch as SearchIcon } from '../../app/icons';
 import { DatePicker as _DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { Dayjs } from 'dayjs';
 import type {
@@ -23,6 +23,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { Loading } from '../../components/Loading';
 import { Empty } from '../../components/Empty';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useConfirmAction } from '../../hooks/useConfirmAction';
 import { useIncidentTable } from './useIncidentTable';
 
 export function IncidentsPage() {
@@ -107,6 +108,7 @@ export function IncidentsPage() {
       void client.invalidateQueries({ queryKey: incidentQueryKeys.all });
     },
   });
+  const confirm = useConfirmAction();
   const table = useIncidentTable(
     incidents.data?.data ?? [],
     incidents.data?.meta.total ?? 0,
@@ -117,8 +119,18 @@ export function IncidentsPage() {
     setSorting,
     columnFilters,
     setColumnFilters,
-    (id) => change.mutate({ id, next: 'ACKNOWLEDGED' }),
-    (id) => change.mutate({ id, next: 'RESOLVED' }),
+    (incident) =>
+      confirm.request({
+        ...esCL.confirm.incidentTake,
+        tone: 'warning',
+        onConfirm: () => change.mutate({ id: incident.id, next: 'ACKNOWLEDGED' }),
+      }),
+    (incident) =>
+      confirm.request({
+        ...esCL.confirm.incidentResolve,
+        tone: 'good',
+        onConfirm: () => change.mutate({ id: incident.id, next: 'RESOLVED' }),
+      }),
   );
   return (
     <Stack spacing={3}>
@@ -216,6 +228,7 @@ export function IncidentsPage() {
       ) : (
         <MaterialReactTable table={table} />
       )}
+      {confirm.dialog}
     </Stack>
   );
 }

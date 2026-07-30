@@ -17,11 +17,14 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import DashboardIcon from '@mui/icons-material/DashboardOutlined';
-import WarningAmberIcon from '@mui/icons-material/WarningAmberOutlined';
-import WorkOutlineIcon from '@mui/icons-material/WorkOutline';
+import {
+  IconCollapse as ChevronLeftIcon,
+  IconDashboard as DashboardIcon,
+  IconIncidents as WarningAmberIcon,
+  IconLogout,
+  IconMenu as MenuIcon,
+  IconWorkOrders as WorkOutlineIcon,
+} from '../../app/icons';
 import { lazy, Suspense, useState } from 'react';
 import { Link as RouterLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -186,7 +189,7 @@ export function Panel({ user }: { user: UserResponse }) {
           <Typography sx={{ display: { xs: 'none', sm: 'block' } }} color="text.secondary">
             {user.name} · {labelRole(user.role)}
           </Typography>
-          <Button color="inherit" onClick={() => logout.mutate()}>
+          <Button color="inherit" startIcon={<IconLogout />} onClick={() => logout.mutate()}>
             {esCL.auth.logout}
           </Button>
         </Toolbar>

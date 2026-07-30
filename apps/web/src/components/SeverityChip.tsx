@@ -1,14 +1,7 @@
-import { Chip } from '@mui/material';
 import { labelSeverity } from '@faena/contracts';
-import { chipColorForTone } from '../app/theme';
 import { severityTone } from '../app/tokens';
+import { StateChip } from './StateChip';
 
 export function SeverityChip({ severity }: { severity: string }) {
-  return (
-    <Chip
-      size="small"
-      label={labelSeverity(severity)}
-      color={chipColorForTone[severityTone(severity)]}
-    />
-  );
+  return <StateChip tone={severityTone(severity)} label={labelSeverity(severity)} />;
 }

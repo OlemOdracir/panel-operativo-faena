@@ -116,6 +116,36 @@ export const esCL = {
     start: 'Iniciar',
     close: 'Cerrar',
   },
+  confirm: {
+    cancel: 'Cancelar',
+    detail: 'Detalle',
+    actions: 'Acciones',
+    incidentTake: {
+      title: '¿Tomar el incidente?',
+      description: 'Quedará reconocido a tu nombre y saldrá de la lista de incidentes sin atender.',
+      action: 'Tomar incidente',
+    },
+    incidentResolve: {
+      title: '¿Resolver el incidente?',
+      description: 'Se cierra el seguimiento operativo del incidente y no se puede revertir.',
+      action: 'Resolver incidente',
+    },
+    orderStart: {
+      title: '¿Iniciar la orden?',
+      description: 'La orden pasa a «En progreso» y queda visible como trabajo activo en faena.',
+      action: 'Iniciar orden',
+    },
+    orderClose: {
+      title: '¿Cerrar la orden?',
+      description: 'Una orden cerrada no admite cambios posteriores y no se puede revertir.',
+      action: 'Cerrar orden',
+    },
+    orderAssign: {
+      title: '¿Asignar la orden?',
+      description: (team: string) => `La orden queda asignada a ${team} y pasa a «Asignada».`,
+      action: 'Asignar orden',
+    },
+  },
   state: {
     loading: 'Cargando datos…',
     noResults: 'Sin resultados',

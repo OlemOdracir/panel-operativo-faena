@@ -78,6 +78,20 @@ El rojo queda reservado a la severidad crítica: los estados de flujo usan neutr
 
 `<CssBaseline />` debe permanecer montado en `providers.tsx`: sin él, el bloque `MuiCssBaseline` del tema no se emite y el árbol hereda `content-box`, con lo que cualquier caja con `width: 100%` más padding desborda el ancho de la ventana.
 
+## Iconografía
+
+`apps/web/src/app/icons.ts` es el único lugar que importa de `@mui/icons-material`. Se descartó sumar una segunda librería de iconos: la existente ya convive de forma nativa con el tema y no agregaba peso más allá de lo importado; el desorden venía del uso disperso y de mezclar variantes rellenas con `Outlined`, no de la librería.
+
+Dos reglas: todo usa la variante `Outlined`, y los nombres que exporta el módulo son semánticos (`IconResolve`) y no gráficos (`CheckCircle`). Cambiar el icono de una acción —o migrar a otra librería— es un cambio en ese archivo y en ninguno más.
+
+Los chips de estado y severidad llevan icono además de color y texto. No es decoración: es el canal que sostiene la distinción donde el color no alcanza el umbral de daltonismo.
+
+## Confirmación de acciones
+
+Toda acción que cambia estado —tomar, resolver, iniciar, cerrar y asignar— pasa por `useConfirmAction`. La mutación se dispara solo desde `onConfirm`, así que un clic accidental en una fila densa no puede alterar la operación.
+
+El botón que confirma nombra la acción («Resolver incidente»), nunca un «Aceptar» genérico, y el foco inicial queda en «Cancelar»: el camino seguro es el que está bajo el dedo cuando el diálogo aparece. En la tabla, la columna de acciones va al final (`positionActionsColumn: 'last'`), de modo que se lee después del dato y no antes.
+
 ## Operación
 
 Compose inicia PostgreSQL, aplica migraciones, ejecuta el seed idempotente y recién entonces inicia la API. El generador Python es opcional y solo usa `POST /readings`; la regla de incidentes permanece en NestJS.

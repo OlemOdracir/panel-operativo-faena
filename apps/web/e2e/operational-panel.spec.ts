@@ -86,14 +86,44 @@ test('taking an incident reaches the API without a validation error', async ({ p
   await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
   await expect(page.locator('.list-row').first()).toBeVisible();
 
-  const take = page.getByRole('button', { name: 'Tomar' }).first();
+  const take = page.getByRole('button', { name: 'Tomar', exact: true }).first();
   await expect(take).toBeVisible();
-  const openBefore = await page.getByRole('button', { name: 'Tomar' }).count();
+  const openBefore = await page.getByRole('button', { name: 'Tomar', exact: true }).count();
   await take.click();
 
+  // Ninguna acción se ejecuta sin pasar por el diálogo de confirmación.
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Tomar incidente' }).click();
+  await expect(dialog).toBeHidden();
+
   // Al reconocerse, el incidente deja de ofrecer «Tomar» y pasa a «Resolver».
-  await expect(page.getByRole('button', { name: 'Tomar' })).toHaveCount(openBefore - 1);
+  await expect(page.getByRole('button', { name: 'Tomar', exact: true })).toHaveCount(
+    openBefore - 1,
+  );
   expect(failed).toEqual([]);
+});
+
+test('cancelling the confirmation leaves the incident untouched', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+
+  await page.getByRole('link', { name: 'Incidentes' }).click();
+  await expect(page.locator('.list-row').first()).toBeVisible();
+
+  const resolve = page.getByRole('button', { name: 'Resolver', exact: true }).first();
+  await expect(resolve).toBeVisible();
+  const before = await page.getByRole('button', { name: 'Resolver', exact: true }).count();
+
+  await resolve.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(dialog).toBeHidden();
+
+  await expect(page.getByRole('button', { name: 'Resolver', exact: true })).toHaveCount(before);
 });
 
 test('administrator session retains the admin role', async ({ page }) => {

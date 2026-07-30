@@ -118,13 +118,21 @@ async function main(): Promise<void> {
         create: { id, value, measuredAt, sensorId: sensor.id },
       });
       if (isOutlier) {
-        const active = await prisma.incident.findFirst({
-          where: {
-            sensorId: sensor.id,
-            status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED] },
-          },
-        });
-        if (!active)
+        // Dos guardas, porque hay dos invariantes distintas: la única sobre
+        // `triggerReadingId` y el índice parcial de un solo incidente activo
+        // por sensor. Mirar solo la segunda rompía el re-seed en cuanto un
+        // incidente pasaba a resuelto: el guard permitía crear otro sobre la
+        // misma lectura y violaba `incidents_trigger_reading_id_key`.
+        const [existing, active] = await Promise.all([
+          prisma.incident.findUnique({ where: { triggerReadingId: reading.id } }),
+          prisma.incident.findFirst({
+            where: {
+              sensorId: sensor.id,
+              status: { in: [IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED] },
+            },
+          }),
+        ]);
+        if (!existing && !active)
           await prisma.incident.create({
             data: {
               sensorId: sensor.id,

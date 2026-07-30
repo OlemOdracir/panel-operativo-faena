@@ -13,6 +13,7 @@ import { esCL, formatDateTime } from '@faena/contracts';
 import type { Team } from '../../api';
 import { SeverityChip } from '../../components/SeverityChip';
 import { StatusChip } from '../../components/StatusChip';
+import { IconClose, IconStart } from '../../app/icons';
 
 export function useWorkOrderTable(
   data: WorkOrderResponse[],
@@ -25,8 +26,8 @@ export function useWorkOrderTable(
   columnFilters: MRT_ColumnFiltersState,
   setColumnFilters: Dispatch<SetStateAction<MRT_ColumnFiltersState>>,
   teams: Team[],
-  assign: (id: string, team: string) => void,
-  advance: (id: string, next: WorkOrderStatus) => void,
+  assign: (order: WorkOrderResponse, team: Team) => void,
+  advance: (order: WorkOrderResponse, next: WorkOrderStatus) => void,
 ) {
   const columns = useMemo<MRT_ColumnDef<WorkOrderResponse>[]>(
     () => [
@@ -63,6 +64,11 @@ export function useWorkOrderTable(
     manualSorting: true,
     enableColumnFilters: true,
     enableRowActions: true,
+    // Las acciones cierran la fila: se leen después del dato, no antes.
+    positionActionsColumn: 'last',
+    displayColumnDefOptions: {
+      'mrt-row-actions': { header: esCL.confirm.actions, size: 200 },
+    },
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -71,19 +77,23 @@ export function useWorkOrderTable(
     state: { columnFilters, pagination, sorting },
     muiTableBodyRowProps: { className: 'list-row' },
     renderRowActions: ({ row }) => (
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={0.5} alignItems="center">
         {row.original.status === 'OPEN' && (
+          // Se mantiene el select nativo: el recorte venía del ancho de la
+          // columna, no del control. La primera opción hace de etiqueta.
           <Select
             native
             size="small"
             defaultValue=""
             displayEmpty
             inputProps={{ 'aria-label': esCL.workOrders.assignAria(row.original.title) }}
+            sx={{ minWidth: 150 }}
             onChange={(event) => {
-              if (event.target.value) assign(row.original.id, event.target.value);
+              const team = teams.find((item) => item.id === event.target.value);
+              if (team) assign(row.original, team);
             }}
           >
-            <option value="">Asignar</option>
+            <option value="">{esCL.workOrders.assign}</option>
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
@@ -92,12 +102,20 @@ export function useWorkOrderTable(
           </Select>
         )}
         {row.original.status === 'ASSIGNED' && (
-          <Button size="small" onClick={() => advance(row.original.id, 'IN_PROGRESS')}>
+          <Button
+            size="small"
+            startIcon={<IconStart />}
+            onClick={() => advance(row.original, 'IN_PROGRESS')}
+          >
             {esCL.workOrders.start}
           </Button>
         )}
         {row.original.status === 'IN_PROGRESS' && (
-          <Button size="small" onClick={() => advance(row.original.id, 'CLOSED')}>
+          <Button
+            size="small"
+            startIcon={<IconClose />}
+            onClick={() => advance(row.original, 'CLOSED')}
+          >
             {esCL.workOrders.close}
           </Button>
         )}

@@ -1,6 +1,5 @@
 import { Button, Stack, TextField } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
+import { IconAdd as AddIcon, IconSearch as SearchIcon } from '../../app/icons';
 import { DatePicker as _DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { Dayjs } from 'dayjs';
 import {
@@ -23,6 +22,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { Loading } from '../../components/Loading';
 import { Empty } from '../../components/Empty';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useConfirmAction } from '../../hooks/useConfirmAction';
 import { WorkOrderForm } from './WorkOrderForm';
 import { OrderStatusSummary } from './OrderStatusSummary';
 import { useWorkOrderTable } from './useWorkOrderTable';
@@ -107,6 +107,7 @@ export function WorkOrdersPage() {
       void client.invalidateQueries({ queryKey: workOrderQueryKeys.all });
     },
   });
+  const confirm = useConfirmAction();
   const table = useWorkOrderTable(
     orders.data?.data ?? [],
     orders.data?.meta.total ?? 0,
@@ -118,8 +119,20 @@ export function WorkOrdersPage() {
     columnFilters,
     setColumnFilters,
     teams.data ?? [],
-    (id, team) => assign.mutate({ id, team }),
-    (id, next) => advance.mutate({ id, next }),
+    (order, team) =>
+      confirm.request({
+        title: esCL.confirm.orderAssign.title,
+        description: esCL.confirm.orderAssign.description(team.name),
+        action: esCL.confirm.orderAssign.action,
+        tone: 'warning',
+        onConfirm: () => assign.mutate({ id: order.id, team: team.id }),
+      }),
+    (order, next) =>
+      confirm.request({
+        ...(next === 'CLOSED' ? esCL.confirm.orderClose : esCL.confirm.orderStart),
+        tone: next === 'CLOSED' ? 'good' : 'info',
+        onConfirm: () => advance.mutate({ id: order.id, next }),
+      }),
   );
   return (
     <Stack spacing={3}>
@@ -221,6 +234,7 @@ export function WorkOrdersPage() {
       ) : (
         <MaterialReactTable table={table} />
       )}
+      {confirm.dialog}
     </Stack>
   );
 }

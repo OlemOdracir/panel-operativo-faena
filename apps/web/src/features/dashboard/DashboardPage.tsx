@@ -1,7 +1,7 @@
 import { Button, Card, CardContent, Grid, Stack } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { IconRefresh as RefreshIcon } from '../../app/icons';
 import { esCL } from '@faena/contracts';
 import { api } from '../../api';
 import { incidentQueryKeys } from '../incidents/query-keys';

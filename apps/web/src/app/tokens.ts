@@ -42,6 +42,10 @@ export const brand = {
  *   oscura (L 0.48–0.67) y >=3:1 contra toda superficie.
  * - `text`: tinta de la etiqueta sobre el fondo tonal del chip, >=4.5:1
  *   (peor caso medido 4.94:1).
+ * - `onMark`: tinta encima del relleno opaco (botón contenido). Casi siempre
+ *   oscura, pero `critical` es la excepción medida: con tinta oscura queda en
+ *   3.97:1 y con blanca alcanza 4.80:1. Asumir una sola tinta para todos los
+ *   tonos deja ese botón bajo el umbral.
  *
  * La separación cromática de una progresión verde→ámbar→naranja→rojo no
  * alcanza el umbral para daltonismo — ninguna escala de severidad de cuatro
@@ -49,12 +53,12 @@ export const brand = {
  * acompaña a una etiqueta de texto y nunca la sustituye.
  */
 export const state = {
-  neutral: { mark: '#7d8899', text: '#c3cbd6' },
-  info: { mark: brand.main, text: brand.light },
-  good: { mark: '#199e70', text: '#3fbf7f' },
-  warning: { mark: '#c98500', text: '#e2a93f' },
-  serious: { mark: '#d95926', text: '#ef8f5c' },
-  critical: { mark: '#d03b3b', text: '#f0757e' },
+  neutral: { mark: '#7d8899', text: '#c3cbd6', onMark: ink.onBrand },
+  info: { mark: brand.main, text: brand.light, onMark: ink.onBrand },
+  good: { mark: '#199e70', text: '#3fbf7f', onMark: ink.onBrand },
+  warning: { mark: '#c98500', text: '#e2a93f', onMark: ink.onBrand },
+  serious: { mark: '#d95926', text: '#ef8f5c', onMark: ink.onBrand },
+  critical: { mark: '#d03b3b', text: '#f0757e', onMark: '#ffffff' },
 } as const;
 
 export type StateTone = keyof typeof state;

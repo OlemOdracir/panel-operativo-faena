@@ -1,5 +1,5 @@
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
+import { IconClear as ClearIcon } from '../app/icons';
 import type { ReactNode } from 'react';
 
 export function FilterCard({
