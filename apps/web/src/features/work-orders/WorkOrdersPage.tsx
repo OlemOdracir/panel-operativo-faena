@@ -1,4 +1,4 @@
-import { Button, Stack, TextField } from '@mui/material';
+import { Button, Dialog, DialogContent, Stack, TextField, Typography } from '@mui/material';
 import { IconAdd as AddIcon, IconSearch as SearchIcon } from '../../app/icons';
 import { DatePicker as _DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { Dayjs } from 'dayjs';
@@ -10,13 +10,19 @@ import {
 } from 'material-react-table';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Priority, WorkOrderListQuery, WorkOrderStatus } from '@faena/contracts';
+import type {
+  Priority,
+  WorkOrderListQuery,
+  WorkOrderResponse,
+  WorkOrderStatus,
+} from '@faena/contracts';
 import { esCL, labelSeverity, labelStatus } from '@faena/contracts';
 import { api } from '../../api';
 import { workOrderQueryKeys } from './query-keys';
 import { catalogQueryKeys } from '../catalog/query-keys';
 import { PageHeading } from '../../components/PageHeading';
 import { FilterCard } from '../../components/FilterCard';
+import { SectionHeading } from '../../components/SectionHeading';
 import { SelectField } from '../../components/SelectField';
 import { ErrorState } from '../../components/ErrorState';
 import { Loading } from '../../components/Loading';
@@ -30,6 +36,7 @@ import { useWorkOrderTable } from './useWorkOrderTable';
 export function WorkOrdersPage() {
   const client = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [viewOrder, setViewOrder] = useState<WorkOrderResponse | null>(null);
   const [pagination, setPagination] = useState<MRT_PaginationState>({ pageIndex: 0, pageSize: 20 });
   const [sorting, setSorting] = useState<MRT_SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
@@ -133,6 +140,7 @@ export function WorkOrdersPage() {
         tone: next === 'CLOSED' ? 'good' : 'info',
         onConfirm: () => advance.mutate({ id: order.id, next }),
       }),
+    (order) => setViewOrder(order),
   );
   return (
     <Stack spacing={3}>
@@ -233,6 +241,14 @@ export function WorkOrdersPage() {
       ) : (
         <MaterialReactTable table={table} />
       )}
+      <Dialog open={Boolean(viewOrder)} onClose={() => setViewOrder(null)} maxWidth="sm" fullWidth>
+        <DialogContent>
+          <SectionHeading title={viewOrder?.title ?? ''} />
+          <Typography color={viewOrder?.description ? 'text.primary' : 'text.secondary'}>
+            {viewOrder?.description || esCL.workOrders.noDescription}
+          </Typography>
+        </DialogContent>
+      </Dialog>
       {confirm.dialog}
     </Stack>
   );

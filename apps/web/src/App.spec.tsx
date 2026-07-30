@@ -325,10 +325,11 @@ describe('App', () => {
   });
 
   it('renders the work-order board and lifecycle actions', async () => {
+    const user = userEvent.setup();
     const order = {
       id: '00000000-0000-4000-8000-000000000010',
       title: 'Revisar bomba',
-      description: null,
+      description: 'Revisar fuga en el sello mecánico antes de reiniciar.',
       priority: 'HIGH',
       status: 'ASSIGNED',
       incidentId: null,
@@ -380,6 +381,17 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByText('Revisar bomba')).toBeInTheDocument());
     expect(screen.getByText('Asignadas')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar' })).toBeInTheDocument();
+
+    // «Ver» muestra el título y el detalle completo de la orden en un modal;
+    // la tabla solo alcanza para el título.
+    await user.click(screen.getByRole('button', { name: 'Ver' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Revisar bomba')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('Revisar fuga en el sello mecánico antes de reiniciar.'),
+    ).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('shows the login form when there is no active session', async () => {
@@ -1331,6 +1343,16 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByText('Reparar cinta')).toBeInTheDocument(), {
       timeout: 5_000,
     });
+
+    // Sin descripción, el modal de «Ver» muestra el mensaje de reemplazo en
+    // lugar de dejar el cuerpo vacío.
+    const openRow = screen.getByRole('row', { name: /Reparar cinta/ });
+    await user.click(within(openRow).getByRole('button', { name: 'Ver' }));
+    const viewDialog = await screen.findByRole('dialog');
+    expect(within(viewDialog).getByText('Reparar cinta')).toBeInTheDocument();
+    expect(within(viewDialog).getByText('Sin descripción.')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     await user.selectOptions(
       screen.getByRole('combobox', { name: `Asignar ${openOrder.title}` }),

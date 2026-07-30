@@ -13,7 +13,7 @@ import { esCL, formatDateTime } from '@faena/contracts';
 import type { Team } from '../../api';
 import { SeverityChip } from '../../components/SeverityChip';
 import { StatusChip } from '../../components/StatusChip';
-import { IconClose, IconStart } from '../../app/icons';
+import { IconClose, IconDetail, IconStart } from '../../app/icons';
 
 export function useWorkOrderTable(
   data: WorkOrderResponse[],
@@ -28,6 +28,7 @@ export function useWorkOrderTable(
   teams: Team[],
   assign: (order: WorkOrderResponse, team: Team) => void,
   advance: (order: WorkOrderResponse, next: WorkOrderStatus) => void,
+  view: (order: WorkOrderResponse) => void,
 ) {
   const columns = useMemo<MRT_ColumnDef<WorkOrderResponse>[]>(
     () => [
@@ -82,6 +83,9 @@ export function useWorkOrderTable(
     muiTableBodyRowProps: { className: 'list-row' },
     renderRowActions: ({ row }) => (
       <Stack direction="row" spacing={0.5} alignItems="center">
+        <Button size="small" startIcon={<IconDetail />} onClick={() => view(row.original)}>
+          {esCL.workOrders.view}
+        </Button>
         {row.original.status === 'OPEN' && (
           // Se mantiene el select nativo: el recorte venía del ancho de la
           // columna, no del control. La primera opción hace de etiqueta.

@@ -116,6 +116,8 @@ export const esCL = {
     assignAria: (title: string) => `Asignar ${title}`,
     start: 'Iniciar',
     close: 'Cerrar',
+    view: 'Ver',
+    noDescription: 'Sin descripción.',
   },
   confirm: {
     cancel: 'Cancelar',

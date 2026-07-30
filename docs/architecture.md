@@ -102,6 +102,12 @@ El formulario vive en un `Dialog`, no permanente en la página: antes se creaba 
 
 `WorkOrderForm` tiene un modo `embedded` para esto: sin él, el formulario traía su propio `Card`, y ese `Card` dentro del panel del `Dialog` se veía como un marco dentro de otro. `embedded` solo quita ese marco exterior; el encabezado («Crear orden de trabajo») se mantiene en ambos modos, porque es el título accesible del diálogo y no hace falta inventarle un `aria-labelledby` aparte.
 
+## Ver el detalle de una orden
+
+La tabla de órdenes solo alcanza para título, prioridad, estado, equipo y fecha; `description` se captura al crear la orden (hasta 4000 caracteres) pero no tenía ningún lugar donde mostrarse después, quedaba de solo escritura. `Ver` abre un modal con el título y la descripción completa, reutilizando el mismo ícono (`IconDetail`) y la misma idea que «Detalle» en incidentes.
+
+No hay una pantalla de detalle propia para la orden ni un motivo de cierre: el brief del curso solo pide 5 pantallas del panel (login, panel general, detalle de incidente, tablero de órdenes) y su propio modelo de datos para `orden_trabajo` no tiene columna de motivo. Agregar cualquiera de las dos cosas sería inventar alcance que el ejercicio no pide, no corregir un defecto.
+
 ## Confirmación de acciones
 
 Toda acción que cambia estado —tomar, resolver, iniciar, cerrar y asignar— pasa por `useConfirmAction`. La mutación se dispara solo desde `onConfirm`, así que un clic accidental en una fila densa no puede alterar la operación.
