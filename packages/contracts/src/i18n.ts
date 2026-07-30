@@ -102,6 +102,7 @@ export const esCL = {
     new: 'Nueva orden',
     cancel: 'Cancelar',
     createTitle: 'Crear orden de trabajo',
+    createFromIncidentHint: 'Genera una orden de trabajo para atender este incidente.',
     management: 'Gestión',
     created: 'Orden creada correctamente.',
     teamsLoadFailed: 'No se pudieron cargar los equipos.',

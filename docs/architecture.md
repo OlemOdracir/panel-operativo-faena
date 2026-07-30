@@ -94,6 +94,12 @@ La respuesta del incidente incluye `unit`. Antes no, y la grilla solo podía mos
 
 `outlierRatio` en el seed es el desvío de la lectura atípica **en proporción al rango** del sensor. Antes era `maxValue + 5` para todos, un offset absoluto, y como la severidad se calcula sobre desvío/rango eso tenía dos consecuencias: los sensores de rango angosto quedaban siempre en crítica y los de rango ancho siempre en media, de modo que **alta y baja no podían aparecer nunca** —las barras vacías del medidor de severidad no eran un fallo de la interfaz, eran datos inalcanzables—, y producía valores imposibles como pH 14 en un rango de 6–9. Al cambiar a proporción, los datos de demostración recorren las cuatro bandas y se mantienen físicamente creíbles.
 
+## Crear una orden desde el incidente
+
+El formulario vive en un `Dialog`, no permanente en la página: antes se creaba y la pantalla no cambiaba —el título seguía escrito, el botón se rehabilitaba— sin ninguna señal de si había funcionado, y `esCL.workOrders.created` estaba escrito en el catálogo sin usarse en ningún lado. Ahora `Nueva orden` abre el modal, crear lo cierra solo e invalidan que el aviso de éxito quede en la página, no adentro del modal que ya se fue.
+
+`WorkOrderForm` tiene un modo `embedded` para esto: sin él, el formulario traía su propio `Card`, y ese `Card` dentro del panel del `Dialog` se veía como un marco dentro de otro. `embedded` solo quita ese marco exterior; el encabezado («Crear orden de trabajo») se mantiene en ambos modos, porque es el título accesible del diálogo y no hace falta inventarle un `aria-labelledby` aparte.
+
 ## Confirmación de acciones
 
 Toda acción que cambia estado —tomar, resolver, iniciar, cerrar y asignar— pasa por `useConfirmAction`. La mutación se dispara solo desde `onConfirm`, así que un clic accidental en una fila densa no puede alterar la operación.

@@ -983,19 +983,39 @@ describe('App', () => {
       expect.anything(),
     );
 
-    await user.type(screen.getByLabelText('Título'), 'Reparar sensor de temperatura');
-    await user.click(screen.getByRole('button', { name: 'Crear orden' }));
+    // El formulario vive en un modal: no aparece hasta que se pide.
+    expect(screen.queryByLabelText('Título')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Nueva orden' }));
+    await screen.findByRole('dialog');
+
+    // Escape cierra el modal sin crear nada.
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // «Cancelar» también cierra sin crear nada.
+    await user.click(screen.getByRole('button', { name: 'Nueva orden' }));
+    let dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining('/work-orders'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Nueva orden' }));
+    dialog = await screen.findByRole('dialog');
+
+    await user.type(within(dialog).getByLabelText('Título'), 'Reparar sensor de temperatura');
+    await user.click(within(dialog).getByRole('button', { name: 'Crear orden' }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/work-orders'),
       expect.objectContaining({ method: 'POST' }),
     );
 
-    // Crear tiene que dejar rastro: sin aviso y con el título aún escrito, el
-    // usuario no sabe si funcionó y reenvía la misma orden.
-    await waitFor(() =>
-      expect(screen.getByText('Orden creada correctamente.')).toBeInTheDocument(),
-    );
-    expect(screen.getByLabelText('Título')).toHaveValue('');
+    // Crear tiene que dejar rastro: el modal se cierra solo y la página
+    // muestra el aviso; sin esto el usuario no sabe si funcionó.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByText('Orden creada correctamente.')).toBeInTheDocument();
   });
 
   it('resolves an acknowledged incident from its detail page', async () => {

@@ -1,4 +1,15 @@
-import { Alert, Box, Button, Card, CardContent, Grid, Stack } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  Grid,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +28,7 @@ import { SeverityChip } from '../../components/SeverityChip';
 import { Loading } from '../../components/Loading';
 import { ErrorState } from '../../components/ErrorState';
 import { useConfirmAction } from '../../hooks/useConfirmAction';
-import { IconBack, IconResolve, IconTake } from '../../app/icons';
+import { IconAdd, IconBack, IconResolve, IconTake } from '../../app/icons';
 
 export function IncidentDetailPage() {
   const { id = '' } = useParams();
@@ -28,13 +39,14 @@ export function IncidentDetailPage() {
     enabled: Boolean(id),
   });
   // Cambiar la llave remonta el formulario, que es la forma de React de
-  // devolverlo a su estado inicial: sin esto el título quedaba escrito después
-  // de crear y era fácil enviar la misma orden dos veces.
+  // devolverlo a su estado inicial para la próxima vez que se abra el modal.
   const [createdCount, setCreatedCount] = useState(0);
+  const [formOpen, setFormOpen] = useState(false);
   const create = useMutation({
     mutationFn: api.createWorkOrder,
     onSuccess: () => {
       setCreatedCount((count) => count + 1);
+      setFormOpen(false);
       void client.invalidateQueries({ queryKey: workOrderQueryKeys.all });
     },
   });
@@ -120,19 +132,49 @@ export function IncidentDetailPage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Stack spacing={2}>
-            {/* `isSuccess` vuelve a false en cuanto se envía otra orden, así que
-                el aviso acompaña a la creación y no se queda pegado. */}
-            {create.isSuccess && <Alert severity="success">{esCL.workOrders.created}</Alert>}
-            <WorkOrderForm
-              key={createdCount}
-              incidentId={item.id}
-              pending={create.isPending}
-              onSubmit={(body) => create.mutate(body)}
-            />
-          </Stack>
+          <Card>
+            <CardContent>
+              <SectionHeading
+                title={esCL.workOrders.createTitle}
+                action={
+                  <Button
+                    variant="contained"
+                    startIcon={<IconAdd />}
+                    onClick={() => setFormOpen(true)}
+                  >
+                    {esCL.workOrders.new}
+                  </Button>
+                }
+              />
+              {/* `isSuccess` vuelve a false en cuanto se envía otra orden, así
+                  que el aviso acompaña a la creación y no se queda pegado. */}
+              {create.isSuccess && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {esCL.workOrders.created}
+                </Alert>
+              )}
+              <Typography color="text.secondary">
+                {esCL.workOrders.createFromIncidentHint}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
+      {/* Sin `aria-labelledby`: el título accesible del diálogo lo aporta el
+          `SectionHeading` que ya renderiza `WorkOrderForm` (rol heading), no
+          hace falta duplicarlo con un id inventado. */}
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="sm" fullWidth>
+        <DialogContent>
+          <WorkOrderForm
+            key={createdCount}
+            embedded
+            incidentId={item.id}
+            pending={create.isPending}
+            onSubmit={(body) => create.mutate(body)}
+            onCancel={() => setFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
       {confirm.dialog}
     </Stack>
   );
