@@ -136,7 +136,7 @@ export function Panel({ user }: { user: UserResponse }) {
               </ListItemIcon>
               {expanded && <ListItemText primary={item.label} />}
               {expanded && item.count ? (
-                <Chip size="small" label={item.count} color="error" />
+                <Chip size="small" label={item.count} color="neutral" />
               ) : null}
             </ListItemButton>
           </Tooltip>

@@ -13,7 +13,15 @@ export function Metric({
 }) {
   return (
     <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-      <Card sx={{ borderColor: tone ? `${tone}.main` : undefined }}>
+      {/* El acento va en un filo superior de 2px: rodear la tarjeta completa
+          de color saturado convertía cada KPI en una alarma. */}
+      <Card
+        sx={
+          tone
+            ? { borderTopWidth: 2, borderTopStyle: 'solid', borderTopColor: `${tone}.main` }
+            : undefined
+        }
+      >
         <CardContent>
           <Typography color="text.secondary">{label}</Typography>
           <Typography variant="h2" sx={{ mt: 1 }}>

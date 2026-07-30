@@ -1,3 +1,10 @@
+/**
+ * Solo ajustes de renderizado de texto.
+ *
+ * Los colores de superficie ya no viven aquí: los define el tema de MUI a
+ * partir de `src/app/tokens.ts` y los aplica CssBaseline. Mantener hexes en
+ * este archivo volvía a duplicar la paleta y desincronizarla del tema.
+ */
 :root {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -9,12 +16,10 @@ html {
   min-width: 320px;
   min-height: 100%;
   font-size: 16px;
-  background: #0d0f12;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: radial-gradient(circle at 75% 0%, rgb(33 194 221 / 8%), transparent 34rem), #0d0f12;
 }

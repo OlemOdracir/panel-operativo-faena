@@ -2,6 +2,7 @@ import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import type { IncidentResponse, IncidentSeverity } from '@faena/contracts';
 import { esCL, labelSeverity } from '@faena/contracts';
 import { SectionHeading } from '../../components/SectionHeading';
+import { severityTone, state } from '../../app/tokens';
 
 export function Distribution({ data }: { data: IncidentResponse[] }) {
   const counts = (['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as IncidentSeverity[]).map((severity) => ({
@@ -29,17 +30,16 @@ export function Distribution({ data }: { data: IncidentResponse[] }) {
                 sx={{
                   width: `${(item.count / max) * 100}%`,
                   height: '100%',
-                  bgcolor:
-                    item.severity === 'CRITICAL'
-                      ? 'error.main'
-                      : item.severity === 'MEDIUM'
-                        ? 'warning.main'
-                        : 'info.main',
+                  // Mismo token que el chip de severidad: el medidor y la
+                  // etiqueta nunca pueden discrepar de color.
+                  bgcolor: state[severityTone(item.severity)].mark,
                   borderRadius: 4,
                 }}
               />
             </Box>
-            <Typography sx={{ width: 24, textAlign: 'right' }}>{item.count}</Typography>
+            <Typography sx={{ width: 24, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+              {item.count}
+            </Typography>
           </Stack>
         ))}
       </CardContent>
