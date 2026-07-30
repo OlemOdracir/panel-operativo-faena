@@ -15,12 +15,18 @@ export function Metric({
     <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
       {/* El acento va en un filo superior de 2px: rodear la tarjeta completa
           de color saturado convertía cada KPI en una alarma. */}
+      {/* `height: 100%` empareja la altura con el resto de la fila: sin esto,
+          el hint opcional (p. ej. «1 en progreso») hacía que esa tarjeta
+          creciera sola y desalineaba la fila. */}
       <Card
-        sx={
-          tone
-            ? { borderTopWidth: 2, borderTopStyle: 'solid', borderTopColor: `${tone}.main` }
-            : undefined
-        }
+        sx={{
+          height: '100%',
+          ...(tone && {
+            borderTopWidth: 2,
+            borderTopStyle: 'solid',
+            borderTopColor: `${tone}.main`,
+          }),
+        }}
       >
         <CardContent>
           <Typography color="text.secondary">{label}</Typography>
