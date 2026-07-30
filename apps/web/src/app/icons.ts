@@ -40,6 +40,10 @@ export { default as IconStart } from '@mui/icons-material/PlayArrowOutlined';
 export { default as IconClose } from '@mui/icons-material/DoneAllOutlined';
 export { default as IconAssign } from '@mui/icons-material/GroupAddOutlined';
 
+// Dirección del desvío de una lectura respecto de su rango.
+export { default as IconOverMax } from '@mui/icons-material/ArrowUpwardOutlined';
+export { default as IconUnderMin } from '@mui/icons-material/ArrowDownwardOutlined';
+
 // Estado. Acompañan a la etiqueta en los chips: el color de la escala de
 // severidad no alcanza el umbral de separación para daltonismo por sí solo
 // (ver `docs/architecture.md`), así que forma y texto son los canales firmes.

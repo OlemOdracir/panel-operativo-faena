@@ -13,6 +13,7 @@ import type { IncidentResponse, IncidentSeverity, IncidentStatus } from '@faena/
 import { esCL, formatDateTime } from '@faena/contracts';
 import { SeverityChip } from '../../components/SeverityChip';
 import { StatusChip } from '../../components/StatusChip';
+import { ReadingCell } from '../../components/ReadingCell';
 import { IconDetail, IconResolve, IconTake } from '../../app/icons';
 
 export function useIncidentTable(
@@ -30,13 +31,21 @@ export function useIncidentTable(
 ) {
   const columns = useMemo<MRT_ColumnDef<IncidentResponse>[]>(
     () => [
-      { accessorKey: 'sensorCode', header: 'Sensor' },
-      { accessorKey: 'areaName', header: 'Área' },
+      { accessorKey: 'sensorCode', header: 'Sensor', size: 140 },
+      { accessorKey: 'areaName', header: 'Área', size: 140 },
       {
         accessorKey: 'value',
         header: 'Lectura',
-        Cell: ({ cell, row }) =>
-          `${cell.getValue<number>()} (${row.original.minValue}–${row.original.maxValue})`,
+        size: 210,
+        Cell: ({ row }) => (
+          <ReadingCell
+            value={row.original.value}
+            unit={row.original.unit}
+            minValue={row.original.minValue}
+            maxValue={row.original.maxValue}
+            severity={row.original.severity}
+          />
+        ),
       },
       {
         accessorKey: 'severity',
@@ -51,6 +60,7 @@ export function useIncidentTable(
       {
         accessorKey: 'openedAt',
         header: 'Detectado',
+        size: 170,
         Cell: ({ cell }) => formatDateTime(cell.getValue<string>()),
       },
     ],
@@ -65,8 +75,12 @@ export function useIncidentTable(
     manualSorting: true,
     enableColumnFilters: true,
     enableRowActions: true,
-    // Las acciones cierran la fila: se leen después del dato, no antes.
+    // Las acciones cierran la fila: se leen después del dato, no antes. Además
+    // van fijadas, para que sigan alcanzables si la tabla se desplaza en
+    // horizontal por el ancho de las demás columnas.
     positionActionsColumn: 'last',
+    enableColumnPinning: true,
+    initialState: { columnPinning: { right: ['mrt-row-actions'] } },
     displayColumnDefOptions: {
       'mrt-row-actions': { header: esCL.confirm.actions, size: 190 },
     },

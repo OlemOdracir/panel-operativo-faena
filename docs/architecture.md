@@ -86,6 +86,14 @@ Dos reglas: todo usa la variante `Outlined`, y los nombres que exporta el módul
 
 Los chips de estado y severidad llevan icono además de color y texto. No es decoración: es el canal que sostiene la distinción donde el color no alcanza el umbral de daltonismo.
 
+## La lectura como dato principal
+
+Un incidente existe porque una lectura salió de rango, así que la medición es lo que manda en la grilla: `ReadingCell` muestra la cifra grande con su unidad, cuánto se salió y un medidor que dibuja el rango válido como pista neutra y el exceso en el color de la severidad. El resto de las columnas es contexto.
+
+La respuesta del incidente incluye `unit`. Antes no, y la grilla solo podía mostrar un número desnudo: «19 (1–14)» no le dice nada a un operador, aunque los sensores sí tenían su unidad guardada.
+
+`outlierRatio` en el seed es el desvío de la lectura atípica **en proporción al rango** del sensor. Antes era `maxValue + 5` para todos, un offset absoluto, y como la severidad se calcula sobre desvío/rango eso tenía dos consecuencias: los sensores de rango angosto quedaban siempre en crítica y los de rango ancho siempre en media, de modo que **alta y baja no podían aparecer nunca** —las barras vacías del medidor de severidad no eran un fallo de la interfaz, eran datos inalcanzables—, y producía valores imposibles como pH 14 en un rango de 6–9. Al cambiar a proporción, los datos de demostración recorren las cuatro bandas y se mantienen físicamente creíbles.
+
 ## Confirmación de acciones
 
 Toda acción que cambia estado —tomar, resolver, iniciar, cerrar y asignar— pasa por `useConfirmAction`. La mutación se dispara solo desde `onConfirm`, así que un clic accidental en una fila densa no puede alterar la operación.

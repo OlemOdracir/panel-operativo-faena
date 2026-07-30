@@ -146,6 +146,12 @@ export const esCL = {
       action: 'Asignar orden',
     },
   },
+  reading: {
+    rangeLabel: 'Rango',
+    over: 'sobre el máximo',
+    under: 'bajo el mínimo',
+    withinRange: 'en rango',
+  },
   state: {
     loading: 'Cargando datos…',
     noResults: 'Sin resultados',
@@ -205,6 +211,15 @@ export function labelSeverity(value: string): string {
 export function labelRole(value: string): string {
   return hasKey(esCL.role, value) ? esCL.role[value as RoleKey] : value;
 }
+/**
+ * Formatea una medida con su unidad. Un número de sensor sin unidad no es
+ * información: «19» no dice nada, «19 m» sí.
+ */
+export function formatMeasurement(value: number, unit?: string): string {
+  const formatted = new Intl.NumberFormat(esCL.locale, { maximumFractionDigits: 2 }).format(value);
+  return unit ? `${formatted} ${unit}` : formatted;
+}
+
 export function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat(esCL.locale, { dateStyle: 'short', timeStyle: 'short' }).format(
     new Date(value),

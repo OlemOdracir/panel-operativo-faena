@@ -64,8 +64,12 @@ export function useWorkOrderTable(
     manualSorting: true,
     enableColumnFilters: true,
     enableRowActions: true,
-    // Las acciones cierran la fila: se leen después del dato, no antes.
+    // Las acciones cierran la fila: se leen después del dato, no antes. Además
+    // van fijadas, para que sigan alcanzables si la tabla se desplaza en
+    // horizontal por el ancho de las demás columnas.
     positionActionsColumn: 'last',
+    enableColumnPinning: true,
+    initialState: { columnPinning: { right: ['mrt-row-actions'] } },
     displayColumnDefOptions: {
       'mrt-row-actions': { header: esCL.confirm.actions, size: 200 },
     },

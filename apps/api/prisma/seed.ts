@@ -68,17 +68,73 @@ async function main(): Promise<void> {
     }),
   ]);
 
+  // `outlierRatio` es el desvío de la lectura atípica **en proporción al rango**
+  // del sensor, no un número absoluto. Antes se usaba `maxValue + 5` para todos:
+  // como la severidad se calcula sobre desvío/rango, ese offset fijo dejaba a los
+  // sensores de rango angosto siempre en CRITICAL y a los de rango ancho siempre
+  // en MEDIUM, sin que HIGH ni LOW pudieran aparecer nunca. Además producía
+  // valores imposibles, como pH 14 en un rango de 6–9.
+  // Los valores de abajo recorren las cuatro bandas (>0.30 crítica, >0.15 alta,
+  // >0.05 media, resto baja) y se mantienen dentro de lo físicamente creíble.
   const sensorDefinitions = [
-    ['MOL-TEMP-01', 'Temperatura molino 1', '°C', 10, 80, areas[0].id],
-    ['MOL-VIB-01', 'Vibración molino 1', 'mm/s', 0, 12, areas[0].id],
-    ['CHA-PRES-01', 'Presión chancador primario', 'bar', 2, 10, areas[1].id],
-    ['CHA-TEMP-01', 'Temperatura correa principal', '°C', 0, 65, areas[1].id],
-    ['TRA-PH-01', 'pH tranque sector norte', 'pH', 6, 9, areas[2].id],
-    ['TRA-NIV-01', 'Nivel tranque sector norte', 'm', 1, 14, areas[2].id],
+    {
+      code: 'MOL-TEMP-01',
+      name: 'Temperatura molino 1',
+      unit: '°C',
+      min: 10,
+      max: 80,
+      outlierRatio: 0.03,
+      areaId: areas[0].id,
+    },
+    {
+      code: 'MOL-VIB-01',
+      name: 'Vibración molino 1',
+      unit: 'mm/s',
+      min: 0,
+      max: 12,
+      outlierRatio: 0.4,
+      areaId: areas[0].id,
+    },
+    {
+      code: 'CHA-PRES-01',
+      name: 'Presión chancador primario',
+      unit: 'bar',
+      min: 2,
+      max: 10,
+      outlierRatio: 0.2,
+      areaId: areas[1].id,
+    },
+    {
+      code: 'CHA-TEMP-01',
+      name: 'Temperatura correa principal',
+      unit: '°C',
+      min: 0,
+      max: 65,
+      outlierRatio: 0.1,
+      areaId: areas[1].id,
+    },
+    {
+      code: 'TRA-PH-01',
+      name: 'pH tranque sector norte',
+      unit: 'pH',
+      min: 6,
+      max: 9,
+      outlierRatio: 0.12,
+      areaId: areas[2].id,
+    },
+    {
+      code: 'TRA-NIV-01',
+      name: 'Nivel tranque sector norte',
+      unit: 'm',
+      min: 1,
+      max: 14,
+      outlierRatio: 0.35,
+      areaId: areas[2].id,
+    },
   ] as const;
 
   const sensors = [];
-  for (const [code, name, unit, minValue, maxValue, areaId] of sensorDefinitions) {
+  for (const { code, name, unit, min: minValue, max: maxValue, areaId } of sensorDefinitions) {
     sensors.push(
       await prisma.sensor.upsert({
         where: { code },
@@ -108,10 +164,12 @@ async function main(): Promise<void> {
       const id = await compatibleReadingId(readingSeed);
       const measuredAt = new Date(baseTime + (sensorIndex * 12 + readingIndex) * 5 * 60_000);
       const isOutlier = readingIndex === 10;
+      const span = Number(sensor.maxValue) - Number(sensor.minValue);
       const value = isOutlier
-        ? Number(sensor.maxValue) + 5
-        : Number(sensor.minValue) +
-          (Number(sensor.maxValue) - Number(sensor.minValue)) * (0.25 + (readingIndex % 4) / 10);
+        ? Math.round(
+            (Number(sensor.maxValue) + span * sensorDefinitions[sensorIndex].outlierRatio) * 100,
+          ) / 100
+        : Number(sensor.minValue) + span * (0.25 + (readingIndex % 4) / 10);
       const reading = await prisma.reading.upsert({
         where: { id },
         update: { value, measuredAt, sensorId: sensor.id },

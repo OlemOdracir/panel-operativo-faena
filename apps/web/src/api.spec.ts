@@ -14,6 +14,7 @@ const incident = {
   sensorCode: 'CHA-TEMP-01',
   areaName: 'Chancado',
   value: 90,
+  unit: '°C',
   minValue: 0,
   maxValue: 80,
   openedAt: '2026-01-01T00:00:00.000Z',

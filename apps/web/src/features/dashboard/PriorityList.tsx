@@ -1,7 +1,7 @@
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { IncidentResponse } from '@faena/contracts';
-import { esCL } from '@faena/contracts';
+import { esCL, formatMeasurement } from '@faena/contracts';
 import { SectionHeading } from '../../components/SectionHeading';
 import { Empty } from '../../components/Empty';
 import { SeverityChip } from '../../components/SeverityChip';
@@ -34,7 +34,9 @@ export function PriorityList({ data }: { data: IncidentResponse[] }) {
                 <Box>
                   <Typography fontWeight={700}>{item.sensorCode}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {item.areaName} · {item.value} ({item.minValue}–{item.maxValue})
+                    {item.areaName} · {formatMeasurement(item.value, item.unit)} ·{' '}
+                    {esCL.reading.rangeLabel} {formatMeasurement(item.minValue)}–
+                    {formatMeasurement(item.maxValue, item.unit)}
                   </Typography>
                 </Box>
                 <Stack direction="row" spacing={1}>

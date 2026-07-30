@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
-export { esCL, formatDateTime, labelRole, labelSeverity, labelStatus } from './i18n.js';
+export {
+  esCL,
+  formatDateTime,
+  formatMeasurement,
+  labelRole,
+  labelSeverity,
+  labelStatus,
+} from './i18n.js';
 
 export const roleSchema = z.enum(['SUPERVISOR', 'ADMIN']);
 export const incidentStatusSchema = z.enum(['OPEN', 'ACKNOWLEDGED', 'RESOLVED']);
@@ -107,6 +114,7 @@ export const incidentResponseSchema = z.strictObject({
   sensorCode: z.string(),
   areaName: z.string(),
   value: z.number(),
+  unit: z.string(),
   minValue: z.number(),
   maxValue: z.number(),
   openedAt: dateTimeSchema,

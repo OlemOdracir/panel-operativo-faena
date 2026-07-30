@@ -134,6 +134,7 @@ export class IncidentsService {
       sensorCode: typed.sensor.code,
       areaName: typed.sensor.area.name,
       value: Number(typed.triggerReading.value),
+      unit: typed.sensor.unit,
       minValue: Number(typed.sensor.minValue),
       maxValue: Number(typed.sensor.maxValue),
       openedAt: typed.openedAt.toISOString(),
