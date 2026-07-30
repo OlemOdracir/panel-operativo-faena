@@ -66,6 +66,36 @@ test('supervisor can monitor incidents and work orders', async ({ page }) => {
   expect(unexpectedConsoleErrors).toEqual([]);
 });
 
+// Las mutaciones de estado nunca se ejercitaban contra la API real: las
+// pruebas de servicio no atraviesan la capa de pipes y las de frontend simulan
+// `fetch`. Por eso un 400 en `PATCH /incidents/:id/status` llegó a producción.
+test('taking an incident reaches the API without a validation error', async ({ page }) => {
+  const failed: string[] = [];
+  page.on('response', (response) => {
+    if (response.url().includes('/status') && !response.ok()) {
+      failed.push(`${response.request().method()} ${response.url()} -> ${response.status()}`);
+    }
+  });
+
+  await page.goto('/');
+  await page.getByLabel('Correo').fill('supervisor@faena.local');
+  await page.getByLabel('Contraseña').fill(supervisorPassword);
+  await page.getByRole('button', { name: 'Ingresar' }).click();
+
+  await page.getByRole('link', { name: 'Incidentes' }).click();
+  await expect(page.getByRole('heading', { name: 'Incidentes', exact: true })).toBeVisible();
+  await expect(page.locator('.list-row').first()).toBeVisible();
+
+  const take = page.getByRole('button', { name: 'Tomar' }).first();
+  await expect(take).toBeVisible();
+  const openBefore = await page.getByRole('button', { name: 'Tomar' }).count();
+  await take.click();
+
+  // Al reconocerse, el incidente deja de ofrecer «Tomar» y pasa a «Resolver».
+  await expect(page.getByRole('button', { name: 'Tomar' })).toHaveCount(openBefore - 1);
+  expect(failed).toEqual([]);
+});
+
 test('administrator session retains the admin role', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Correo').fill('admin@faena.local');

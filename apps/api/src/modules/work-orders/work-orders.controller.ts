@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   idParamsSchema,
   workOrderAssignmentSchema,
@@ -18,15 +18,13 @@ export class WorkOrdersController {
   constructor(private readonly orders: WorkOrdersService) {}
 
   @Get()
-  @UsePipes(new ZodValidationPipe(workOrderListQuerySchema))
-  list(@Query() query: WorkOrderListQuery) {
+  list(@Query(new ZodValidationPipe(workOrderListQuerySchema)) query: WorkOrderListQuery) {
     return this.orders.list(query);
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(workOrderCreateSchema))
   create(
-    @Body()
+    @Body(new ZodValidationPipe(workOrderCreateSchema))
     body: {
       title: string;
       description?: string;
@@ -43,21 +41,22 @@ export class WorkOrdersController {
     return this.orders.findById(params.id);
   }
 
+  // Igual que en incidentes: el esquema del cuerpo se aplica al `@Body()`. Con
+  // `@UsePipes` a nivel de método también validaba `params` y devolvía 400.
   @Patch(':id/assignment')
-  @UsePipes(new ZodValidationPipe(workOrderAssignmentSchema))
   assign(
     @Param(new ZodValidationPipe(idParamsSchema)) params: IdParams,
-    @Body() body: { teamId: string },
+    @Body(new ZodValidationPipe(workOrderAssignmentSchema)) body: { teamId: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.orders.assign(params.id, body.teamId, user);
   }
 
   @Patch(':id/status')
-  @UsePipes(new ZodValidationPipe(workOrderStatusUpdateSchema))
   changeStatus(
     @Param(new ZodValidationPipe(idParamsSchema)) params: IdParams,
-    @Body() body: { status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'CLOSED' },
+    @Body(new ZodValidationPipe(workOrderStatusUpdateSchema))
+    body: { status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'CLOSED' },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.orders.changeStatus(params.id, body.status, user);

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import {
   idParamsSchema,
   incidentListQuerySchema,
@@ -16,8 +16,7 @@ export class IncidentsController {
   constructor(private readonly incidents: IncidentsService) {}
 
   @Get()
-  @UsePipes(new ZodValidationPipe(incidentListQuerySchema))
-  list(@Query() query: IncidentListQuery) {
+  list(@Query(new ZodValidationPipe(incidentListQuerySchema)) query: IncidentListQuery) {
     return this.incidents.list(query);
   }
 
@@ -26,11 +25,14 @@ export class IncidentsController {
     return this.incidents.findById(params.id);
   }
 
+  // El esquema va en el `@Body()`, no en un `@UsePipes` de método: este último
+  // aplica el pipe a *todos* los argumentos, así que el esquema del cuerpo
+  // también validaba `params` y la ruta respondía 400 siempre.
   @Patch(':id/status')
-  @UsePipes(new ZodValidationPipe(incidentStatusUpdateSchema))
   changeStatus(
     @Param(new ZodValidationPipe(idParamsSchema)) params: IdParams,
-    @Body() body: { status: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' },
+    @Body(new ZodValidationPipe(incidentStatusUpdateSchema))
+    body: { status: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.incidents.changeStatus(params.id, body.status, user);
