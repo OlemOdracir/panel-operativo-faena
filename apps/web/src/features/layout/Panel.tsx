@@ -63,7 +63,7 @@ export function Panel({ user }: { user: UserResponse }) {
   });
   const logout = useMutation({
     mutationFn: api.logout,
-    onSuccess: () => client.removeQueries({ queryKey: authQueryKeys.me }),
+    onSuccess: () => client.invalidateQueries({ queryKey: authQueryKeys.me }),
   });
   const expanded = mobile ? true : !collapsed;
   const nav = [
