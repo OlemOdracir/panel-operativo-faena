@@ -490,10 +490,19 @@ describe('App', () => {
     };
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
         if (url.includes('/auth/me'))
           return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (init?.method === 'PATCH' && url.includes('/assignment'))
+          return new Response(
+            JSON.stringify({
+              ...order,
+              status: 'ASSIGNED',
+              teamId: '00000000-0000-4000-8000-000000000051',
+              teamName: 'Mantenimiento',
+            }),
+          );
         if (url.includes('/work-orders'))
           return new Response(
             JSON.stringify({
@@ -983,6 +992,32 @@ describe('App', () => {
     );
   });
 
+  it('shows an error state on the incident detail page when it fails to load', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/auth/me'))
+          return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (url.includes('/incidents/')) return new Response('{}', { status: 503 });
+        return new Response(JSON.stringify([]));
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/incidents/11111111-0000-4000-8000-000000000113']}>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    await waitFor(
+      () => expect(screen.getByText('No se pudo completar la solicitud.')).toBeInTheDocument(),
+      { timeout: 3_000 },
+    );
+  });
+
   it('clears filters and narrows incidents by status, severity, and sensor', async () => {
     const user = userEvent.setup();
     const sensorId1 = '22222222-0000-4000-8000-000000000201';
@@ -1181,10 +1216,16 @@ describe('App', () => {
 
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
         if (url.includes('/auth/me'))
           return new Response(JSON.stringify({ user: { ...userForTest, role: 'SUPERVISOR' } }));
+        if (init?.method === 'PATCH' && url.includes('/assignment'))
+          return new Response(
+            JSON.stringify({ ...openOrder, status: 'ASSIGNED', teamId: team.id }),
+          );
+        if (init?.method === 'PATCH' && url.includes('/status'))
+          return new Response(JSON.stringify({ ...assignedOrder, status: 'IN_PROGRESS' }));
         if (url.includes('/work-orders'))
           return new Response(
             JSON.stringify({
@@ -1327,6 +1368,16 @@ describe('App', () => {
     );
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Estado de la faena' })).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Colapsar menú' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('navigation', { name: 'Navegación principal' }),
+      ).not.toBeInTheDocument(),
     );
 
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
