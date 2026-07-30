@@ -1,9 +1,10 @@
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { IncidentResponse } from '@faena/contracts';
-import { esCL, formatMeasurement } from '@faena/contracts';
+import { esCL } from '@faena/contracts';
 import { SectionHeading } from '../../components/SectionHeading';
 import { Empty } from '../../components/Empty';
+import { ReadingCell } from '../../components/ReadingCell';
 import { SeverityChip } from '../../components/SeverityChip';
 import { StatusChip } from '../../components/StatusChip';
 
@@ -26,19 +27,24 @@ export function PriorityList({ data }: { data: IncidentResponse[] }) {
             {data.map((item) => (
               <Stack
                 key={item.id}
-                direction="row"
+                direction={{ xs: 'column', sm: 'row' }}
                 justifyContent="space-between"
-                alignItems="center"
-                sx={{ py: 1.5, gap: 1 }}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                sx={{ py: 1.5, gap: 1.5 }}
               >
                 <Box>
                   <Typography fontWeight={700}>{item.sensorCode}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {item.areaName} · {formatMeasurement(item.value, item.unit)} ·{' '}
-                    {esCL.reading.rangeLabel} {formatMeasurement(item.minValue)}–
-                    {formatMeasurement(item.maxValue, item.unit)}
+                    {item.areaName}
                   </Typography>
                 </Box>
+                <ReadingCell
+                  value={item.value}
+                  unit={item.unit}
+                  minValue={item.minValue}
+                  maxValue={item.maxValue}
+                  severity={item.severity}
+                />
                 <Stack direction="row" spacing={1}>
                   <SeverityChip severity={item.severity} />
                   <StatusChip status={item.status} />

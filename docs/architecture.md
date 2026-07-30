@@ -94,6 +94,10 @@ La respuesta del incidente incluye `unit`. Antes no, y la grilla solo podía mos
 
 `outlierRatio` en el seed es el desvío de la lectura atípica **en proporción al rango** del sensor. Antes era `maxValue + 5` para todos, un offset absoluto, y como la severidad se calcula sobre desvío/rango eso tenía dos consecuencias: los sensores de rango angosto quedaban siempre en crítica y los de rango ancho siempre en media, de modo que **alta y baja no podían aparecer nunca** —las barras vacías del medidor de severidad no eran un fallo de la interfaz, eran datos inalcanzables—, y producía valores imposibles como pH 14 en un rango de 6–9. Al cambiar a proporción, los datos de demostración recorren las cuatro bandas y se mantienen físicamente creíbles.
 
+«Prioridades operativas», en el resumen, reutiliza el mismo `ReadingCell` compacto de la grilla de incidentes en lugar de un texto plano «Área · valor · Rango»: la lectura es el dato que decide la prioridad, así que merece el mismo medidor visual en todas las pantallas donde aparece, no solo en el detalle. Cada fila apila el sensor, la lectura y los chips en columna en `xs` y los alinea en fila desde `sm`: en fila fija el medidor (`minWidth: 168`) más los dos chips no cabían en un ancho de teléfono y el chip de estado quedaba cortado fuera de la tarjeta.
+
+Esta lista se mantiene como lista, no como gráfico: cada fila trae varios atributos por incidente (sensor, área, severidad, estado, lectura) que un gráfico agregado no puede mostrar sin perder información. La distribución por severidad, al costado, ya cubre la necesidad de una vista agregada.
+
 ## Crear una orden desde el incidente
 
 El formulario vive en un `Dialog`, no permanente en la página: antes se creaba y la pantalla no cambiaba —el título seguía escrito, el botón se rehabilitaba— sin ninguna señal de si había funcionado, y `esCL.workOrders.created` estaba escrito en el catálogo sin usarse en ningún lado. Ahora `Nueva orden` abre el modal, crear lo cierra solo e invalidan que el aviso de éxito quede en la página, no adentro del modal que ya se fue.

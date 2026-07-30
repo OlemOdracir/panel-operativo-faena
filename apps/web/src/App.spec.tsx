@@ -141,6 +141,10 @@ describe('App', () => {
     );
 
     await waitFor(() => expect(screen.getByText('Prioridades operativas')).toBeInTheDocument());
+    // La lectura se destaca igual que en el detalle del incidente, no como
+    // texto plano: cifra, unidad y rango con el mismo componente.
+    expect(screen.getByText('15 bar')).toBeInTheDocument();
+    expect(screen.getByText(/Rango 2 – 10 bar/)).toBeInTheDocument();
     expect(screen.queryByText('Filtrar incidentes')).not.toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: /Incidentes/ }));
     await waitFor(() => expect(screen.getByText('Filtrar incidentes')).toBeInTheDocument(), {
