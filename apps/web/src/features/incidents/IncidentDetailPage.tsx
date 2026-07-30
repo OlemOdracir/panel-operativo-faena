@@ -1,8 +1,8 @@
-import { Button, Card, CardContent, Grid, Stack } from '@mui/material';
+import { Box, Button, Card, CardContent, Grid, Stack } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IncidentStatus } from '@faena/contracts';
-import { esCL, formatDateTime, formatMeasurement } from '@faena/contracts';
+import { esCL, formatDateTime } from '@faena/contracts';
 import { api } from '../../api';
 import { incidentQueryKeys } from './query-keys';
 import { catalogQueryKeys } from '../catalog/query-keys';
@@ -11,6 +11,7 @@ import { WorkOrderForm } from '../work-orders/WorkOrderForm';
 import { PageHeading } from '../../components/PageHeading';
 import { SectionHeading } from '../../components/SectionHeading';
 import { DetailRow } from '../../components/DetailRow';
+import { ReadingCell } from '../../components/ReadingCell';
 import { StatusChip } from '../../components/StatusChip';
 import { SeverityChip } from '../../components/SeverityChip';
 import { Loading } from '../../components/Loading';
@@ -66,15 +67,17 @@ export function IncidentDetailPage() {
               <SectionHeading title={esCL.incidents.detailTitle} />
               <DetailRow label={esCL.incidents.area} value={item.areaName} />
               <DetailRow label={esCL.incidents.sensor} value={item.sensorCode} />
-              <DetailRow
-                label={esCL.incidents.reading}
-                value={formatMeasurement(item.value, item.unit)}
-              />
-              <DetailRow
-                label={esCL.incidents.range}
-                value={`${formatMeasurement(item.minValue)} – ${formatMeasurement(item.maxValue, item.unit)}`}
-              />
               <DetailRow label={esCL.incidents.detected} value={formatDateTime(item.openedAt)} />
+              <Box sx={{ mt: 2 }}>
+                <ReadingCell
+                  label={esCL.incidents.outOfRangeReading}
+                  value={item.value}
+                  unit={item.unit}
+                  minValue={item.minValue}
+                  maxValue={item.maxValue}
+                  severity={item.severity}
+                />
+              </Box>
               <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
                 <StatusChip status={item.status} />
                 <SeverityChip severity={item.severity} />

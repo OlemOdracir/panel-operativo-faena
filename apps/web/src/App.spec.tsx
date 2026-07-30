@@ -315,6 +315,13 @@ describe('App', () => {
       expect(screen.getByRole('heading', { name: /CHA-TEMP-01/ })).toBeInTheDocument(),
     );
     expect(screen.getByText('Crear orden de trabajo')).toBeInTheDocument();
+
+    // La lectura va destacada y con unidad, no como una fila plana más: es el
+    // dato que originó el incidente y la razón por la que se abre esta página.
+    expect(screen.getByText('Lectura fuera de rango')).toBeInTheDocument();
+    expect(screen.getByText('90 °C')).toBeInTheDocument();
+    expect(screen.getByText('10 °C')).toBeInTheDocument();
+    expect(screen.getByText(/Rango 0 – 80 °C/)).toBeInTheDocument();
   });
 
   it('renders the work-order board and lifecycle actions', async () => {

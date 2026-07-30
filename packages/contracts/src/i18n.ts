@@ -73,6 +73,7 @@ export const esCL = {
     severity: 'Severidad',
     detected: 'Detectado',
     reading: 'Lectura',
+    outOfRangeReading: 'Lectura fuera de rango',
     range: 'rango',
     take: 'Tomar',
     takeIncident: 'Tomar incidente',

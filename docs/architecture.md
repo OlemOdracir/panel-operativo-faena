@@ -88,7 +88,7 @@ Los chips de estado y severidad llevan icono además de color y texto. No es dec
 
 ## La lectura como dato principal
 
-Un incidente existe porque una lectura salió de rango, así que la medición es lo que manda en la grilla: `ReadingCell` muestra la cifra grande con su unidad, cuánto se salió y un medidor que dibuja el rango válido como pista neutra y el exceso en el color de la severidad. El resto de las columnas es contexto.
+Un incidente existe porque una lectura salió de rango, así que la medición es lo que manda: `ReadingCell` muestra la cifra grande con su unidad, cuánto se salió y un medidor que dibuja el rango válido como pista neutra y el exceso en el color de la severidad. Es el único componente que decide cómo se ve una lectura; con `label` se dibuja enmarcada y rotulada para la página de detalle, donde como fila plana quedaba indistinguible de «Área» o «Sensor».
 
 La respuesta del incidente incluye `unit`. Antes no, y la grilla solo podía mostrar un número desnudo: «19 (1–14)» no le dice nada a un operador, aunque los sensores sí tenían su unidad guardada.
 

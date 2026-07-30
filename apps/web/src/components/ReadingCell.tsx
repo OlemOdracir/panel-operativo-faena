@@ -1,4 +1,4 @@
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography, alpha } from '@mui/material';
 import { esCL, formatMeasurement } from '@faena/contracts';
 import { severityTone, state } from '../app/tokens';
 import { IconOverMax, IconUnderMin } from '../app/icons';
@@ -11,6 +11,11 @@ import { IconOverMax, IconUnderMin } from '../app/icons';
  * El medidor dibuja el rango válido como pista neutra y el exceso en el color
  * de la severidad, con una separación de 2px entre ambos para que se lean como
  * tramos distintos y no como una sola barra.
+ *
+ * Con `label` se dibuja enmarcada y rotulada, para la página de detalle: ahí la
+ * lectura no compite con otras columnas, compite con las filas de contexto, y
+ * como fila plana quedaba indistinguible de «Área» o «Sensor». Este archivo
+ * sigue siendo el único que decide cómo se ve una lectura.
  */
 export function ReadingCell({
   value,
@@ -18,12 +23,14 @@ export function ReadingCell({
   minValue,
   maxValue,
   severity,
+  label,
 }: {
   value: number;
   unit: string;
   minValue: number;
   maxValue: number;
   severity: string;
+  label?: string;
 }) {
   const tone = state[severityTone(severity)];
   const span = Math.max(maxValue - minValue, Number.EPSILON);
@@ -36,8 +43,8 @@ export function ReadingCell({
   const direction = overMax > 0 ? esCL.reading.over : underMin > 0 ? esCL.reading.under : null;
   const DirectionIcon = overMax > 0 ? IconOverMax : IconUnderMin;
 
-  return (
-    <Stack spacing={0.75} sx={{ py: 0.5, minWidth: 168 }}>
+  const body = (
+    <Stack spacing={0.75} sx={{ py: label ? 0 : 0.5, minWidth: 168 }}>
       <Stack direction="row" alignItems="baseline" spacing={1}>
         <Typography
           sx={{
@@ -99,5 +106,24 @@ export function ReadingCell({
         {formatMeasurement(maxValue, unit)}
       </Typography>
     </Stack>
+  );
+
+  if (!label) return body;
+
+  return (
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: alpha(tone.mark, 0.35),
+        bgcolor: alpha(tone.mark, 0.08),
+      }}
+    >
+      <Typography variant="overline" sx={{ color: tone.text, display: 'block', mb: 0.5 }}>
+        {label}
+      </Typography>
+      {body}
+    </Box>
   );
 }
