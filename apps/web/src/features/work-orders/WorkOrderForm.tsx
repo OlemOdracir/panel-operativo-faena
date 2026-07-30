@@ -1,19 +1,21 @@
 import { Button, Card, CardContent, Stack, TextField } from '@mui/material';
 import { useState } from 'react';
 import { esCL, labelSeverity } from '@faena/contracts';
-import type { Team } from '../../api';
 import { SectionHeading } from '../../components/SectionHeading';
 import { SelectField } from '../../components/SelectField';
 
+/**
+ * La orden nace siempre en `OPEN`: asignar equipo es una transición aparte, en
+ * el tablero. Por eso este formulario no recibe equipos —los recibía y los
+ * descartaba, arrastrando una consulta de red que no usaba nadie.
+ */
 export function WorkOrderForm({
   incidentId,
-  teams: _teams,
   pending,
   onSubmit,
   onCancel,
 }: {
   incidentId?: string;
-  teams: Team[];
   pending: boolean;
   onSubmit: (body: {
     title: string;

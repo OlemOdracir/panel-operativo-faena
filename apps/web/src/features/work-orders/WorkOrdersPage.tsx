@@ -152,7 +152,6 @@ export function WorkOrdersPage() {
       />
       {showForm && (
         <WorkOrderForm
-          teams={teams.data ?? []}
           pending={create.isPending}
           onSubmit={(body) => create.mutate(body)}
           onCancel={() => setShowForm(false)}

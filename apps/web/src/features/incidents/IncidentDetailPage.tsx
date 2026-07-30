@@ -1,11 +1,11 @@
-import { Box, Button, Card, CardContent, Grid, Stack } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Grid, Stack } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IncidentStatus } from '@faena/contracts';
 import { esCL, formatDateTime } from '@faena/contracts';
 import { api } from '../../api';
 import { incidentQueryKeys } from './query-keys';
-import { catalogQueryKeys } from '../catalog/query-keys';
 import { workOrderQueryKeys } from '../work-orders/query-keys';
 import { WorkOrderForm } from '../work-orders/WorkOrderForm';
 import { PageHeading } from '../../components/PageHeading';
@@ -27,10 +27,14 @@ export function IncidentDetailPage() {
     queryFn: () => api.incident(id),
     enabled: Boolean(id),
   });
-  const teams = useQuery({ queryKey: catalogQueryKeys.teams, queryFn: api.teams });
+  // Cambiar la llave remonta el formulario, que es la forma de React de
+  // devolverlo a su estado inicial: sin esto el título quedaba escrito después
+  // de crear y era fácil enviar la misma orden dos veces.
+  const [createdCount, setCreatedCount] = useState(0);
   const create = useMutation({
     mutationFn: api.createWorkOrder,
     onSuccess: () => {
+      setCreatedCount((count) => count + 1);
       void client.invalidateQueries({ queryKey: workOrderQueryKeys.all });
     },
   });
@@ -116,12 +120,17 @@ export function IncidentDetailPage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <WorkOrderForm
-            incidentId={item.id}
-            teams={teams.data ?? []}
-            pending={create.isPending}
-            onSubmit={(body) => create.mutate(body)}
-          />
+          <Stack spacing={2}>
+            {/* `isSuccess` vuelve a false en cuanto se envía otra orden, así que
+                el aviso acompaña a la creación y no se queda pegado. */}
+            {create.isSuccess && <Alert severity="success">{esCL.workOrders.created}</Alert>}
+            <WorkOrderForm
+              key={createdCount}
+              incidentId={item.id}
+              pending={create.isPending}
+              onSubmit={(body) => create.mutate(body)}
+            />
+          </Stack>
         </Grid>
       </Grid>
       {confirm.dialog}
