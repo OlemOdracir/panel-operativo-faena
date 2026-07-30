@@ -314,7 +314,7 @@ describe('App', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: /CHA-TEMP-01/ })).toBeInTheDocument(),
     );
-    expect(screen.getByText('Crear orden de trabajo')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nueva orden' })).toBeInTheDocument();
 
     // La lectura va destacada y con unidad, no como una fila plana más: es el
     // dato que originó el incidente y la razón por la que se abre esta página.

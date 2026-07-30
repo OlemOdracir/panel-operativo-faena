@@ -98,6 +98,8 @@ La respuesta del incidente incluye `unit`. Antes no, y la grilla solo podía mos
 
 El formulario vive en un `Dialog`, no permanente en la página: antes se creaba y la pantalla no cambiaba —el título seguía escrito, el botón se rehabilitaba— sin ninguna señal de si había funcionado, y `esCL.workOrders.created` estaba escrito en el catálogo sin usarse en ningún lado. Ahora `Nueva orden` abre el modal, crear lo cierra solo e invalidan que el aviso de éxito quede en la página, no adentro del modal que ya se fue.
 
+`Nueva orden` vive como `action` de `PageHeading`, junto al título del incidente, no en una segunda columna propia. Antes tenía su propia tarjeta al lado de «Datos del incidente», pero esa tarjeta no contenía más que el botón y una frase de ayuda: dos columnas para un solo botón dejaban el dato del incidente —la razón de existir de la página— comprimido a la mitad del ancho sin necesidad.
+
 `WorkOrderForm` tiene un modo `embedded` para esto: sin él, el formulario traía su propio `Card`, y ese `Card` dentro del panel del `Dialog` se veía como un marco dentro de otro. `embedded` solo quita ese marco exterior; el encabezado («Crear orden de trabajo») se mantiene en ambos modos, porque es el título accesible del diálogo y no hace falta inventarle un `aria-labelledby` aparte.
 
 ## Confirmación de acciones

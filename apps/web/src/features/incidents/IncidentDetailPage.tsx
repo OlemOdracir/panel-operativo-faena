@@ -1,15 +1,4 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, Stack } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -75,91 +64,67 @@ export function IncidentDetailPage() {
         eyebrow={esCL.incidents.detailEyebrow}
         title={item.sensorCode}
         text={esCL.incidents.detailDescription}
+        action={
+          <Button variant="contained" startIcon={<IconAdd />} onClick={() => setFormOpen(true)}>
+            {esCL.workOrders.new}
+          </Button>
+        }
       />
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <SectionHeading title={esCL.incidents.detailTitle} />
-              <DetailRow label={esCL.incidents.area} value={item.areaName} />
-              <DetailRow label={esCL.incidents.sensor} value={item.sensorCode} />
-              <DetailRow label={esCL.incidents.detected} value={formatDateTime(item.openedAt)} />
-              <Box sx={{ mt: 2 }}>
-                <ReadingCell
-                  label={esCL.incidents.outOfRangeReading}
-                  value={item.value}
-                  unit={item.unit}
-                  minValue={item.minValue}
-                  maxValue={item.maxValue}
-                  severity={item.severity}
-                />
-              </Box>
-              <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
-                <StatusChip status={item.status} />
-                <SeverityChip severity={item.severity} />
-                {item.status === 'OPEN' && (
-                  <Button
-                    variant="contained"
-                    startIcon={<IconTake />}
-                    onClick={() =>
-                      confirm.request({
-                        ...esCL.confirm.incidentTake,
-                        tone: 'warning',
-                        onConfirm: () => change.mutate({ next: 'ACKNOWLEDGED' }),
-                      })
-                    }
-                  >
-                    {esCL.incidents.takeIncident}
-                  </Button>
-                )}
-                {item.status === 'ACKNOWLEDGED' && (
-                  <Button
-                    variant="contained"
-                    startIcon={<IconResolve />}
-                    onClick={() =>
-                      confirm.request({
-                        ...esCL.confirm.incidentResolve,
-                        tone: 'good',
-                        onConfirm: () => change.mutate({ next: 'RESOLVED' }),
-                      })
-                    }
-                  >
-                    {esCL.incidents.resolveIncident}
-                  </Button>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <SectionHeading
-                title={esCL.workOrders.createTitle}
-                action={
-                  <Button
-                    variant="contained"
-                    startIcon={<IconAdd />}
-                    onClick={() => setFormOpen(true)}
-                  >
-                    {esCL.workOrders.new}
-                  </Button>
+      {/* `isSuccess` vuelve a false en cuanto se envía otra orden, así que el
+          aviso acompaña a la creación y no se queda pegado. */}
+      {create.isSuccess && <Alert severity="success">{esCL.workOrders.created}</Alert>}
+      <Card>
+        <CardContent>
+          <SectionHeading title={esCL.incidents.detailTitle} />
+          <DetailRow label={esCL.incidents.area} value={item.areaName} />
+          <DetailRow label={esCL.incidents.sensor} value={item.sensorCode} />
+          <DetailRow label={esCL.incidents.detected} value={formatDateTime(item.openedAt)} />
+          <Box sx={{ mt: 2 }}>
+            <ReadingCell
+              label={esCL.incidents.outOfRangeReading}
+              value={item.value}
+              unit={item.unit}
+              minValue={item.minValue}
+              maxValue={item.maxValue}
+              severity={item.severity}
+            />
+          </Box>
+          <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
+            <StatusChip status={item.status} />
+            <SeverityChip severity={item.severity} />
+            {item.status === 'OPEN' && (
+              <Button
+                variant="contained"
+                startIcon={<IconTake />}
+                onClick={() =>
+                  confirm.request({
+                    ...esCL.confirm.incidentTake,
+                    tone: 'warning',
+                    onConfirm: () => change.mutate({ next: 'ACKNOWLEDGED' }),
+                  })
                 }
-              />
-              {/* `isSuccess` vuelve a false en cuanto se envía otra orden, así
-                  que el aviso acompaña a la creación y no se queda pegado. */}
-              {create.isSuccess && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  {esCL.workOrders.created}
-                </Alert>
-              )}
-              <Typography color="text.secondary">
-                {esCL.workOrders.createFromIncidentHint}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              >
+                {esCL.incidents.takeIncident}
+              </Button>
+            )}
+            {item.status === 'ACKNOWLEDGED' && (
+              <Button
+                variant="contained"
+                startIcon={<IconResolve />}
+                onClick={() =>
+                  confirm.request({
+                    ...esCL.confirm.incidentResolve,
+                    tone: 'good',
+                    onConfirm: () => change.mutate({ next: 'RESOLVED' }),
+                  })
+                }
+              >
+                {esCL.incidents.resolveIncident}
+              </Button>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
       {/* Sin `aria-labelledby`: el título accesible del diálogo lo aporta el
           `SectionHeading` que ya renderiza `WorkOrderForm` (rol heading), no
           hace falta duplicarlo con un id inventado. */}
