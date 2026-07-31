@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build and test output
+dist/
+dist-test/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.vite/
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE and operating system
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+
+# Database volumes and temporary files
+.postgres-data/
+tmp/
+temp/
+audit/
+
+# Python tooling output
+__pycache__/
+*.egg-info/
+.pytest_cache/

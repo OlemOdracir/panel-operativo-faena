@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: faena_test
+          POSTGRES_USER: faena_app
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U faena_app -d faena_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared contracts
+        run: pnpm --filter @faena/contracts build
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+
+      - name: Check commit messages
+        if: github.event_name == 'pull_request'
+        run: pnpm exec commitlint --from="${{ github.event.pull_request.base.sha }}" --to="${{ github.event.pull_request.head.sha }}" --verbose
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Check UTF-8 encoding
+        run: pnpm run encoding:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type-check
+        run: pnpm run typecheck
+
+      - name: Validate Prisma schema
+        env:
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
+        run: pnpm --filter @faena/api exec prisma validate --config prisma.config.ts
+
+      - name: Apply migrations and seed test database
+        env:
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
+          JWT_SECRET: ci-only-secret-that-is-longer-than-32-characters
+          SEED_ADMIN_PASSWORD: ci-admin-password
+          SEED_SUPERVISOR_PASSWORD: ci-supervisor-password
+        run: |
+          pnpm --filter @faena/api prisma:migrate
+          pnpm --filter @faena/api prisma:seed
+
+      - name: Test
+        env:
+          DATABASE_URL: postgresql://faena_app:ci-only-password@localhost:5432/faena_test?schema=public
+          JWT_SECRET: ci-only-secret-that-is-longer-than-32-characters
+          RUN_DB_INTEGRATION: 'true'
+        run: pnpm test
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check OpenAPI artifact
+        run: pnpm run docs:check
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Test reading generator
+        working-directory: tools/reading-generator
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+          python -m pytest -q
+
+      - name: Validate Compose file
+        env:
+          POSTGRES_DB: faena
+          POSTGRES_USER: faena_app
+          POSTGRES_PASSWORD: ci-only-password
+          JWT_SECRET: ci-only-secret-that-is-longer-than-32-characters
+          SEED_ADMIN_PASSWORD: ci-admin-password
+          SEED_SUPERVISOR_PASSWORD: ci-supervisor-password
+          AUTH_COOKIE_SECURE: 'false'
+          API_PORT: '13000'
+          WEB_PORT: '8080'
+          POSTGRES_PORT: '5432'
+        run: docker compose config --quiet

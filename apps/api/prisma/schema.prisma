@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPERVISOR
+  ADMIN
+}
+enum IncidentStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+enum WorkOrderStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  CLOSED
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Area {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique @db.VarChar(32)
+  name String @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sensors Sensor[]
+  teams Team[]
+  @@map("areas")
+}
+
+model Sensor {
+  id String @id @default(uuid()) @db.Uuid
+  areaId String @map("area_id") @db.Uuid
+  code String @unique @db.VarChar(64)
+  name String @db.VarChar(120)
+  unit String @db.VarChar(16)
+  minValue Decimal @map("min_value") @db.Decimal(12, 4)
+  maxValue Decimal @map("max_value") @db.Decimal(12, 4)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  area Area @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  readings Reading[]
+  incidents Incident[]
+  @@index([areaId])
+  @@map("sensors")
+}
+
+model Reading {
+  id String @id @default(uuid()) @db.Uuid
+  sensorId String @map("sensor_id") @db.Uuid
+  value Decimal @db.Decimal(12, 4)
+  measuredAt DateTime @map("measured_at") @db.Timestamptz(6)
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  openedIncident Incident?
+  @@index([sensorId, measuredAt(sort: Desc)])
+  @@map("readings")
+}
+
+model Incident {
+  id String @id @default(uuid()) @db.Uuid
+  sensorId String @map("sensor_id") @db.Uuid
+  triggerReadingId String @unique @map("trigger_reading_id") @db.Uuid
+  status IncidentStatus @default(OPEN)
+  severity IncidentSeverity @default(MEDIUM)
+  openedAt DateTime @default(now()) @map("opened_at") @db.Timestamptz(6)
+  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz(6)
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
+  acknowledgedById String? @map("acknowledged_by_id") @db.Uuid
+  resolvedById String? @map("resolved_by_id") @db.Uuid
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  triggerReading Reading @relation(fields: [triggerReadingId], references: [id], onDelete: Restrict)
+  acknowledgedBy User? @relation("incident_acknowledger", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolvedBy User? @relation("incident_resolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  workOrders WorkOrder[]
+  @@index([sensorId, status])
+  @@index([acknowledgedById])
+  @@index([resolvedById])
+  @@map("incidents")
+}
+
+model Team {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique @db.VarChar(32)
+  name String @db.VarChar(120)
+  active Boolean @default(true)
+  areaId String @map("area_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  workOrders WorkOrder[]
+  area Area @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  @@index([areaId])
+  @@map("teams")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique @db.VarChar(320)
+  name String @db.VarChar(120)
+  role Role
+  passwordHash String @map("password_hash") @db.VarChar(255)
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  acknowledgedIncidents Incident[] @relation("incident_acknowledger")
+  resolvedIncidents Incident[] @relation("incident_resolver")
+  createdOrders WorkOrder[] @relation("order_creator")
+  assignedOrders WorkOrder[] @relation("order_assigner")
+  startedOrders WorkOrder[] @relation("order_starter")
+  closedOrders WorkOrder[] @relation("order_closer")
+  @@map("users")
+}
+
+model WorkOrder {
+  id String @id @default(uuid()) @db.Uuid
+  title String @db.VarChar(160)
+  description String? @db.VarChar(4000)
+  priority Priority @default(MEDIUM)
+  status WorkOrderStatus @default(OPEN)
+  incidentId String? @map("incident_id") @db.Uuid
+  teamId String? @map("team_id") @db.Uuid
+  createdById String @map("created_by_id") @db.Uuid
+  assignedById String? @map("assigned_by_id") @db.Uuid
+  startedById String? @map("started_by_id") @db.Uuid
+  closedById String? @map("closed_by_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  assignedAt DateTime? @map("assigned_at") @db.Timestamptz(6)
+  startedAt DateTime? @map("started_at") @db.Timestamptz(6)
+  closedAt DateTime? @map("closed_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  incident Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  team Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  createdBy User @relation("order_creator", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedBy User? @relation("order_assigner", fields: [assignedById], references: [id], onDelete: SetNull)
+  startedBy User? @relation("order_starter", fields: [startedById], references: [id], onDelete: SetNull)
+  closedBy User? @relation("order_closer", fields: [closedById], references: [id], onDelete: SetNull)
+  @@index([incidentId])
+  @@index([teamId, status])
+  @@index([createdById])
+  @@map("work_orders")
+}
